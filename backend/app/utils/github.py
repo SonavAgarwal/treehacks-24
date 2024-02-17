@@ -1,17 +1,10 @@
 import shutil
 import subprocess
-from dotenv import load_dotenv
 import os
 import openai
 import requests
-# from app.models.git_models import GitRepository
 
-load_dotenv()
 together_key = os.getenv("TOGETHER_KEY")
-
-client = openai.OpenAI(
-    base_url="https://api.together.xyz/v1",
-    api_key=together_key)
 
 # api function calls these in order
 # 1 - query graphql --> all the repos and metadata (sophia)
@@ -33,10 +26,14 @@ class GitRepository:
 
 
 class GitFile:
-    def __init__(self, name, path, url):
+    def __init__(self, path, num_commits):
         self.path = path  # includes the name
+        self.num_commits = num_commits
         self.score = 0
         self.relevant_code = []
+    
+    def __repr__(self):
+        return f"File: {self.path} - {self.num_commits} commits"
 
 
 class GitCommit:
@@ -57,7 +54,6 @@ def create_repository_objects(query_outputs, user_username):
           repo = GitRepository(repo_data['name'], repo_data['url'])
           repo.description = repo_data['description'] if repo_data['description'] else None
           repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
-          # repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
           repo.commits = []
           for commit in repo_data['defaultBranchRef']['target']['history']['edges']:
               if user_username not in commit['node']['author']['email']:
@@ -157,7 +153,7 @@ def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
             shutil.rmtree(repo_path)
         
         print(f"Downloading {repo.name}")
-        clone_command = f"git clone --depth 1 {repo.url} {repo_path}"
+        clone_command = f"git clone {repo.url} {repo_path}"
         
         try:
             subprocess.run(clone_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -177,12 +173,36 @@ def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
 
 
 
-def fetch_files(repos):
-    # using git blame to get relevant code
-    return None  # return files
+def fetch_files(repos, username):
+    clone_dir = "/usr/cloned_repos"
+    files_contributed = []  # To store tuples of (file, num_occurrences)
+    for repo in repos:
+        user = repo.url.split('/')[-2]
+        repo_path = os.path.join(clone_dir, user, repo.name)
+        os.chdir(repo_path)  # Change working directory to the repo's path
 
-# repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
+        # Constructing the git log command
+        git_command = f'git log --author="{username}" --pretty="" --name-only | sort | uniq -c | sort -rn'
+        
+        # Execute the git command
+        try:
+            output = subprocess.check_output(git_command, shell=True, text=True)
+            # Parsing the output
+            for line in output.strip().split('\n'):
+                parts = line.strip().split(maxsplit=1)
+                if len(parts) == 2:
+                    num_occurrences, file_name = int(parts[0]), parts[1]
+                    files_contributed.append(GitFile(file_name, num_occurrences))
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing git command: {e}")
+
+    return files_contributed
+
+repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
 # download_repos(repos)
+
+files = fetch_files(repos, "sophiasharif")
+print(files)
 
 
 # user_repos = fetch_repos("sophiasharif")
