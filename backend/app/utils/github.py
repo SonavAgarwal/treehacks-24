@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 import openai
 import requests
+# from app.models.git_models import GitRepository
 
 load_dotenv()
 together_key = os.getenv("TOGETHER_KEY")
@@ -18,9 +19,41 @@ client = openai.OpenAI(
 # 3 - get relevant code (sophia) (git blame for relevant files)
 # 3.5 - score the code based on the query (sonav)
 
+class GitRepository:
+    def __init__(self, name, url):
+        self.name = name
+        self.url = url
+        self.description = ""
+        self.languages = []
+        self.files = []
+        self.commits = []
 
-import requests
-import json
+
+class GitFile:
+    def __init__(self, name, path, url):
+        self.path = path  # includes the name
+        self.score = 0
+        self.relevant_code = []
+
+
+class GitCommit:
+    def __init__(self, sha, message, date):
+        self.sha = sha
+        self.message = message
+        self.date = date
+        self.files = []
+
+
+def create_repository_objects(query_outputs):
+    repositories = []
+    for repo_data in query_outputs:
+        repo = GitRepository(repo_data['name'], repo_data['url'])
+        repo.description = repo_data['description'] if repo_data['description'] else ""
+        repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
+        repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], None) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+        repositories.append(repo)
+    return repositories
+
 
 def fetch_repos(user_username):
     url = 'https://api.github.com/graphql'
@@ -79,7 +112,8 @@ def fetch_repos(user_username):
     if response.status_code == 200:
         data = response.json()
         repositories = data['data']['user']['repositories']['nodes']
-        return repositories
+        repos = create_repository_objects(repositories)
+        return repos
     else:
         print('Failed to fetch repositories:', response.text)
         return None
@@ -95,23 +129,29 @@ def fetch_files(repos):
 
 fetch_repos("sophiasharif")
 user_repos = fetch_repos("sophiasharif")
-if user_repos:
-    for repo in user_repos:
-        print(repo)
+for repo in user_repos:
+    print("REPO ", repo.name)
+    print(repo.url)
+    print(repo.description)
+    print(repo.languages)
+    print(repo.commits)
 
-def get_github_user_id(username):
-    """Fetch GitHub user ID based on username."""
-    url = f"https://api.github.com/users/{username}"
-    headers = {'Accept': 'application/vnd.github.v3+json'}
+
+
+
+# def get_github_user_id(username):
+#     """Fetch GitHub user ID based on username."""
+#     url = f"https://api.github.com/users/{username}"
+#     headers = {'Accept': 'application/vnd.github.v3+json'}
     
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises an HTTPError if the status is 4XX or 5XX
-        user_data = response.json()
-        return user_data.get('id')
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching user data: {e}")
-        return None
+#     try:
+#         response = requests.get(url, headers=headers)
+#         response.raise_for_status()  # Raises an HTTPError if the status is 4XX or 5XX
+#         user_data = response.json()
+#         return user_data.get('id')
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error fetching user data: {e}")
+#         return None
 
 # username = 'sophiasharif'  # Replace 'octocat' with the actual GitHub username
 # user_id = get_github_user_id(username)
