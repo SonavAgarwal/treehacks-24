@@ -42,6 +42,9 @@ class GitCommit:
         self.message = message
         self.date = date
         self.files = []
+    
+    def __repr__(self):
+        return f"Commit: {self.sha[:4]} - {self.message} - {self.date}"
 
 
 def create_repository_objects(query_outputs):
@@ -50,7 +53,7 @@ def create_repository_objects(query_outputs):
         repo = GitRepository(repo_data['name'], repo_data['url'])
         repo.description = repo_data['description'] if repo_data['description'] else ""
         repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
-        repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], None) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+        repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
         repositories.append(repo)
     return repositories
 
@@ -87,6 +90,7 @@ def fetch_repos(user_username):
               node {
                 oid
                 message
+                committedDate
               }
             }
           }
