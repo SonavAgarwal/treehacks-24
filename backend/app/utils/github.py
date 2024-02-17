@@ -53,12 +53,15 @@ class GitCommit:
 def create_repository_objects(query_outputs):
     repositories = []
     for repo_data in query_outputs:
-        repo = GitRepository(repo_data['name'], repo_data['url'])
-        repo.description = repo_data['description'] if repo_data['description'] else None
-        repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
-        repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
-        repo.last_modified = repo.commits[0].date
-        repositories.append(repo)
+        try:
+          repo = GitRepository(repo_data['name'], repo_data['url'])
+          repo.description = repo_data['description'] if repo_data['description'] else None
+          repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
+          repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+          repo.last_modified = repo.commits[0].date
+          repositories.append(repo)
+        except Exception as e:
+          print(f"Error creating repository {repo_data['name']} object: {e}")
     return repositories
 
 
@@ -165,19 +168,18 @@ def fetch_files(repos):
     # using git blame to get relevant code
     return None  # return files
 
-repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
-download_repos(repos)
+# repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
+# download_repos(repos)
 
 
-# fetch_repos("sophiasharif")
-# user_repos = fetch_repos("sophiasharif")
-# for repo in user_repos:
-#     print("REPO ", repo.name)
-#     print(repo.url)
-#     print(repo.description)
-#     print(repo.languages)
-#     print(repo.commits)
-#     print(repo.last_modified)
+user_repos = fetch_repos("SonavAgarwal")
+for repo in user_repos:
+    print("REPO ", repo.name)
+    print(repo.url)
+    print(repo.description)
+    print(repo.languages)
+    print(repo.commits)
+    print(repo.last_modified)
 
 
 
