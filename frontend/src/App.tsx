@@ -7,17 +7,18 @@ import axios from "axios";
 function App() {
 	const [name, setName] = useState<string>("");
 
-	function fetchHelloWorld() {
+	function fetchHelloWorld(name: string) {
+		console.log(name);
 		// "http://localhost:8000/analyze_account"
 		return axios
 			.post("http://localhost:8000/analyze_account", {
-				files: [
-					"filter_blind_alleys.ml",
-					"find_the_cheese.js",
-					"meow.hs",
-					"help.tsx",
+				username: name,
+				queries: [
+					"code for web development",
+					"code using object oriented programming",
+					"code applying data structures",
+					"code with low level languages such as Assembly",
 				],
-				query: "code that uses functional programming",
 			})
 			.then((response) => {
 				console.log(response);
@@ -35,7 +36,7 @@ function App() {
 				/>
 				<button
 					onClick={() => {
-						fetchHelloWorld();
+						fetchHelloWorld(name);
 					}}
 				>
 					Fetch
