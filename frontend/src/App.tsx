@@ -22,6 +22,12 @@ function App() {
 			});
 	}
 
+	function sophiaFunction() {
+		return axios.get("http://localhost:8000/testing").then((response) => {
+			console.log(response);
+		});
+	}
+
 	return (
 		<>
 			<div>
@@ -37,6 +43,13 @@ function App() {
 					}}
 				>
 					Fetch
+				</button>
+				<button
+					onClick={() => {
+						sophiaFunction();
+					}}
+				>
+					Sophia button
 				</button>
 			</div>
 		</>

@@ -6,17 +6,21 @@ class GitRepository:
         self.languages = []
         self.files = []
         self.commits = []
+        self.last_modified = None
 
         # query scores
-        # maps from query name to scores
         self.query_relevances = {}
 
 
 class GitFile:
-    def __init__(self, name, path, url):
+    def __init__(self, path, num_commits):
         self.path = path  # includes the name
+        self.num_commits = num_commits
         self.score = 0
         self.relevant_code = []
+
+    def __repr__(self):
+        return f"File: {self.path} - {self.num_commits} commits"
 
 
 class GitCommit:
@@ -25,3 +29,6 @@ class GitCommit:
         self.message = message
         self.date = date
         self.files = []
+
+    def __repr__(self):
+        return f"Commit: {self.sha[:4]} - {self.message} - {self.date}"
