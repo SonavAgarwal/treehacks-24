@@ -1,3 +1,5 @@
+import shutil
+import subprocess
 from dotenv import load_dotenv
 import os
 import openai
@@ -123,22 +125,48 @@ def fetch_repos(user_username):
         return None
 
 
-def download_repos(repos):
-    return None  # return repos
+def download_repos(repos: list[GitRepository]):
+    clone_dir = "/usr/cloned_repos"
+    if not os.path.exists(clone_dir):
+        os.makedirs(clone_dir)
+    os.chdir(clone_dir)
+    
+    for repo in repos:
+        repo_dir = os.path.join(clone_dir, repo.name)
+        
+        # Check if the repository directory already exists
+        if os.path.exists(repo_dir):
+            print(f"{repo.name} already exists. Deleting existing directory.")
+            shutil.rmtree(repo_dir)
+        
+        print(f"Downloading {repo.name}")
+        clone_command = f"git clone {repo.url}"
+        
+        try:
+            # Execute the git clone command
+            subprocess.run(clone_command, check=True, shell=True)
+            print(f"Successfully cloned {repo.name}")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to clone {repo.name}: {e}")
+
 
 
 def fetch_files(repos):
     # using git blame to get relevant code
     return None  # return files
 
-fetch_repos("sophiasharif")
-user_repos = fetch_repos("sophiasharif")
-for repo in user_repos:
-    print("REPO ", repo.name)
-    print(repo.url)
-    print(repo.description)
-    print(repo.languages)
-    print(repo.commits)
+# repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5')]
+# download_repos(repos)
+
+
+# fetch_repos("sophiasharif")
+# user_repos = fetch_repos("sophiasharif")
+# for repo in user_repos:
+#     print("REPO ", repo.name)
+#     print(repo.url)
+#     print(repo.description)
+#     print(repo.languages)
+#     print(repo.commits)
 
 
 
