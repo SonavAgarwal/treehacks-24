@@ -136,7 +136,9 @@ def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
         os.makedirs(clone_dir)
     
     for repo in repos:
-        repo_path = os.path.join(clone_dir, repo.name)
+        user = repo.url.split('/')[-2]
+        repo_path = os.path.join(clone_dir, user, repo.name)
+        print(repo_path)
         
         # Delete the repo directory if it already exists
         if os.path.exists(repo_path):
@@ -168,18 +170,18 @@ def fetch_files(repos):
     # using git blame to get relevant code
     return None  # return files
 
-# repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
-# download_repos(repos)
+repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
+download_repos(repos)
 
 
-user_repos = fetch_repos("SonavAgarwal")
-for repo in user_repos:
-    print("REPO ", repo.name)
-    print(repo.url)
-    print(repo.description)
-    print(repo.languages)
-    print(repo.commits)
-    print(repo.last_modified)
+# user_repos = fetch_repos("SonavAgarwal")
+# for repo in user_repos:
+#     print("REPO ", repo.name)
+#     print(repo.url)
+#     print(repo.description)
+#     print(repo.languages)
+#     print(repo.commits)
+#     print(repo.last_modified)
 
 
 
