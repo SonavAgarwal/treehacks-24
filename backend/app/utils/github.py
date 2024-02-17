@@ -1,3 +1,5 @@
+import shutil
+import subprocess
 from dotenv import load_dotenv
 import os
 import openai
@@ -24,9 +26,10 @@ class GitRepository:
         self.name = name
         self.url = url
         self.description = ""
-        self.languages = []
+        self.languages = [] # TODO: sort this by frequency or something (just a list of strings for now)
         self.files = []
         self.commits = []
+        self.last_modified = None
 
 
 class GitFile:
@@ -51,17 +54,18 @@ def create_repository_objects(query_outputs):
     repositories = []
     for repo_data in query_outputs:
         repo = GitRepository(repo_data['name'], repo_data['url'])
-        repo.description = repo_data['description'] if repo_data['description'] else ""
+        repo.description = repo_data['description'] if repo_data['description'] else None
         repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
         repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+        repo.last_modified = repo.commits[0].date
         repositories.append(repo)
     return repositories
 
 
 def fetch_repos(user_username):
     url = 'https://api.github.com/graphql'
-    access_token = os.getenv("GITHUB_TOKEN")
-    query = """
+    access_token = os.getenv("GITHUB_TOKEN") # TODO: update the query so that only commits the user has made are fetched
+    query = """ 
     {
       user(login: "%s") {
         repositories(first: 100) {
@@ -123,22 +127,57 @@ def fetch_repos(user_username):
         return None
 
 
-def download_repos(repos):
-    return None  # return repos
+def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
+    clone_dir = "/usr/cloned_repos"
+    if not os.path.exists(clone_dir):
+        os.makedirs(clone_dir)
+    
+    for repo in repos:
+        repo_path = os.path.join(clone_dir, repo.name)
+        
+        # Delete the repo directory if it already exists
+        if os.path.exists(repo_path):
+            print(f"{repo.name} already exists. Deleting existing directory.")
+            shutil.rmtree(repo_path)
+        
+        print(f"Downloading {repo.name}")
+        clone_command = f"git clone --depth 1 {repo.url} {repo_path}"
+        
+        try:
+            subprocess.run(clone_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            # Check the size of the cloned repo
+            total_size = sum(os.path.getsize(os.path.join(dirpath, filename)) for dirpath, dirnames, filenames in os.walk(repo_path) for filename in filenames)
+            total_size_mb = total_size / (1024 * 1024)  # Convert bytes to MB
+            
+            if total_size_mb > size_limit_mb:
+                print(f"{repo.name} exceeds the size limit of {size_limit_mb}MB. Deleting...")
+                shutil.rmtree(repo_path)
+            else:
+                print(f"Successfully cloned {repo.name}, size: {total_size_mb:.2f}MB")
+                
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to clone {repo.name}: {e}")
+
 
 
 def fetch_files(repos):
     # using git blame to get relevant code
     return None  # return files
 
-fetch_repos("sophiasharif")
-user_repos = fetch_repos("sophiasharif")
-for repo in user_repos:
-    print("REPO ", repo.name)
-    print(repo.url)
-    print(repo.description)
-    print(repo.languages)
-    print(repo.commits)
+repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
+download_repos(repos)
+
+
+# fetch_repos("sophiasharif")
+# user_repos = fetch_repos("sophiasharif")
+# for repo in user_repos:
+#     print("REPO ", repo.name)
+#     print(repo.url)
+#     print(repo.description)
+#     print(repo.languages)
+#     print(repo.commits)
+#     print(repo.last_modified)
 
 
 
