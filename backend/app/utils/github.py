@@ -1,3 +1,18 @@
+'''
+fetch_repos(user_username: str) -> list[GitRepository]
+    return a list of GitRepository objects for the user
+
+download_repos(repos: list[GitRepository], size_limit_mb: int = 100)
+    download the repos to the server
+
+fetch_files(repos: list[GitRepository], username: str) -> list[GitFile]
+    return a list of GitFile objects for the user's repos
+    GitFile objects contain number of commits and relevant code chunks
+
+delete_repos(repos: list[GitRepository])
+    delete the repos from the server
+'''
+
 import re
 import shutil
 import subprocess
@@ -199,3 +214,14 @@ def fetch_files(repos, username):
 
     return res
 
+
+def delete_repos(repos: list[GitRepository]):
+    clone_dir = "/usr/cloned_repos"
+    for repo in repos:
+        user = repo.url.split('/')[-2]
+        repo_path = os.path.join(clone_dir, user, repo.name)
+        if os.path.exists(repo_path):
+            shutil.rmtree(repo_path)
+            print(f"Deleted {repo.name}")
+        else:
+            print(f"attempted to delete {repo.name} but it does not exist")
