@@ -1,2 +1,5 @@
 fastapi==0.75.0
 uvicorn==0.17.6
+together
+python-dotenv
+openai

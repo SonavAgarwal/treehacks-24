@@ -7,14 +7,20 @@ import axios from "axios";
 function App() {
 	const [name, setName] = useState<string>("");
 
-	function fetchHelloWorld(name: string) {
+	function fetchHelloWorld() {
+		// "http://localhost:8000/analyze_account"
 		return axios
-			.get("http://localhost:8000/hello/John")
-			.then(function (response) {
-				console.log(response.data);
+			.post("http://localhost:8000/analyze_account", {
+				files: [
+					"filter_blind_alleys.ml",
+					"find_the_cheese.js",
+					"meow.hs",
+					"help.tsx",
+				],
+				query: "code that uses functional programming",
 			})
-			.catch(function (error) {
-				console.error("Error:", error);
+			.then((response) => {
+				console.log(response);
 			});
 	}
 
@@ -29,7 +35,7 @@ function App() {
 				/>
 				<button
 					onClick={() => {
-						fetchHelloWorld(name);
+						fetchHelloWorld();
 					}}
 				>
 					Fetch
