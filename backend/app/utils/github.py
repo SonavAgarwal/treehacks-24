@@ -4,6 +4,7 @@ import subprocess
 import os
 import aiohttp
 from app.models.git_models import *
+from datetime import datetime
 
 together_key = os.getenv("TOGETHER_KEY")
 
@@ -22,7 +23,8 @@ def create_repository_objects(query_outputs, user_username):
                 sha = commit['node']['oid']
                 message = commit['node']['message']
                 date = commit['node']['committedDate']
-                repo.commits.append(GitCommit(sha, message, date))
+                date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+                repo.commits.append(GitCommit(sha, message, date_obj))
             repo.last_modified = repo.commits[0].date
             repositories.append(repo)
         except Exception as e:

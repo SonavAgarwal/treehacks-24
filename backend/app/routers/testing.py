@@ -14,8 +14,10 @@ async def test():
     # download_repos(repos)
 
     repos = await fetch_repos("sophiasharif")
+    sample_repo = repos[0]
+    print(type(sample_repo.commits[0].date))
     # files = fetch_files(repos, "sophiasharif")
-    # print(repos)
+    print(repos)
 
 
 
