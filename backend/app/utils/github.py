@@ -25,7 +25,9 @@ def create_repository_objects(query_outputs, user_username):
                 date = commit['node']['committedDate']
                 date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
                 repo.commits.append(GitCommit(sha, message, date_obj))
-            repo.last_modified = repo.commits[0].date if repo.commits else None
+            if not repo.commits:
+                continue
+            repo.last_modified = repo.commits[0].date
             repositories.append(repo)
         except Exception as e:
             print(f"Error creating repository {repo_data['name']} object: {e}")
