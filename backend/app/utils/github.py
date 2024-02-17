@@ -1,52 +1,10 @@
 import shutil
 import subprocess
 import os
-import openai
-import requests
+import aiohttp
 from app.models.git_models import *
 
 together_key = os.getenv("TOGETHER_KEY")
-
-# api function calls these in order
-# 1 - query graphql --> all the repos and metadata (sophia)
-# 1.5 - calculate relevance of repos (sonav)
-# 2 - download relevant repos (sophia) (process into repo object)
-# 2.5 - get relevant files (sonav) --> file objects that are relevant
-# 3 - get relevant code (sophia) (git blame for relevant files)
-# 3.5 - score the code based on the query (sonav)
-
-# class GitRepository:
-#     def __init__(self, name, url):
-#         self.name = name
-#         self.url = url
-#         self.description = ""
-#         self.languages = [] # TODO: sort this by frequency or something (just a list of strings for now)
-#         self.files = []
-#         self.commits = []
-#         self.last_modified = None
-
-
-# class GitFile:
-#     def __init__(self, path, num_commits):
-#         self.path = path  # includes the name
-#         self.num_commits = num_commits
-#         self.score = 0
-#         self.relevant_code = []
-
-#     def __repr__(self):
-#         return f"File: {self.path} - {self.num_commits} commits"
-
-
-# class GitCommit:
-#     def __init__(self, sha, message, date):
-#         self.sha = sha
-#         self.message = message
-#         self.date = date
-#         self.files = []
-
-#     def __repr__(self):
-#         return f"Commit: {self.sha[:4]} - {self.message} - {self.date}"
-
 
 def create_repository_objects(query_outputs, user_username):
     repositories = []
@@ -71,11 +29,10 @@ def create_repository_objects(query_outputs, user_username):
     return repositories
 
 
-def fetch_repos(user_username):
+async def fetch_repos(user_username):
     url = 'https://api.github.com/graphql'
-    # TODO: update the query so that only commits the user has made are fetched
     access_token = os.getenv("GITHUB_TOKEN")
-    query = """ 
+    query = """
     {
       user(login: "%s") {
         repositories(first: 100) {
@@ -92,27 +49,27 @@ def fetch_repos(user_username):
               }
             }
             defaultBranchRef {
-            name
-            target {
+              name
+              target {
                 ... on Commit {
-            history(first: 100) { 
-            pageInfo {
-              endCursor
-              hasNextPage
-            }
-            edges {
-              node {
-                oid
-                message
-                committedDate
-                author {
-                  email
+                  history(first: 100) { 
+                    pageInfo {
+                      endCursor
+                      hasNextPage
+                    }
+                    edges {
+                      node {
+                        oid
+                        message
+                        committedDate
+                        author {
+                          email
+                        }
+                      }
+                    }
+                  }
                 }
               }
-            }
-          }
-        }
-            }
             }
           }
         }
@@ -120,24 +77,21 @@ def fetch_repos(user_username):
     }
     """ % (user_username)
 
-    # Request headers
     headers = {
-        'Authorization': f'bearer {access_token}',
+        'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json',
     }
 
-    # Make the GraphQL request
-    response = requests.post(url, headers=headers, json={'query': query})
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        data = response.json()
-        repositories = data['data']['user']['repositories']['nodes']
-        repos = create_repository_objects(repositories, user_username)
-        return repos
-    else:
-        print('Failed to fetch repositories:', response.text)
-        return None
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json={'query': query}) as response:
+            if response.status == 200:
+                data = await response.json()
+                repositories = data['data']['user']['repositories']['nodes']
+                repos = create_repository_objects(repositories, user_username)
+                return repos
+            else:
+                print('Failed to fetch repositories:', await response.text())
+                return None
 
 
 def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
@@ -210,20 +164,3 @@ def fetch_files(repos, username):
 
     return files_contributed
 
-
-# repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'),
-#          GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
-# download_repos(repos)
-
-# files = fetch_files(repos, "sophiasharif")
-# print(files)
-
-
-# user_repos = fetch_repos("sophiasharif")
-# for repo in user_repos:
-#     print("REPO ", repo.name)
-#     print(repo.url)
-#     print(repo.description)
-#     print(repo.languages)
-#     print(repo.commits)
-#     print(repo.last_modified)
