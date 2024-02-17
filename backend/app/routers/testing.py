@@ -13,9 +13,7 @@ async def test():
     # print("LENGTH:", len(files))
     # download_repos(repos)
 
-    repos = await fetch_repos("sophiasharif")
-    sample_repo = repos[0]
-    print(type(sample_repo.commits[0].date))
+    repos = await fetch_repos("SonavAgarwal")
     # files = fetch_files(repos, "sophiasharif")
     print(repos)
 
