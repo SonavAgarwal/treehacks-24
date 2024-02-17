@@ -50,14 +50,22 @@ class GitCommit:
         return f"Commit: {self.sha[:4]} - {self.message} - {self.date}"
 
 
-def create_repository_objects(query_outputs):
+def create_repository_objects(query_outputs, user_username):
     repositories = []
     for repo_data in query_outputs:
         try:
           repo = GitRepository(repo_data['name'], repo_data['url'])
           repo.description = repo_data['description'] if repo_data['description'] else None
           repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
-          repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+          # repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+          repo.commits = []
+          for commit in repo_data['defaultBranchRef']['target']['history']['edges']:
+              if user_username not in commit['node']['author']['email']:
+                  continue
+              sha = commit['node']['oid']
+              message = commit['node']['message']
+              date = commit['node']['committedDate']
+              repo.commits.append(GitCommit(sha, message, date))
           repo.last_modified = repo.commits[0].date
           repositories.append(repo)
         except Exception as e:
@@ -88,7 +96,7 @@ def fetch_repos(user_username):
             name
             target {
                 ... on Commit {
-          history(first: 100) { 
+            history(first: 100) { 
             pageInfo {
               endCursor
               hasNextPage
@@ -98,6 +106,9 @@ def fetch_repos(user_username):
                 oid
                 message
                 committedDate
+                author {
+                  email
+                }
               }
             }
           }
@@ -123,7 +134,7 @@ def fetch_repos(user_username):
     if response.status_code == 200:
         data = response.json()
         repositories = data['data']['user']['repositories']['nodes']
-        repos = create_repository_objects(repositories)
+        repos = create_repository_objects(repositories, user_username)
         return repos
     else:
         print('Failed to fetch repositories:', response.text)
@@ -170,11 +181,11 @@ def fetch_files(repos):
     # using git blame to get relevant code
     return None  # return files
 
-repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
-download_repos(repos)
+# repos = [GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'), GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
+# download_repos(repos)
 
 
-# user_repos = fetch_repos("SonavAgarwal")
+# user_repos = fetch_repos("sophiasharif")
 # for repo in user_repos:
 #     print("REPO ", repo.name)
 #     print(repo.url)
@@ -183,24 +194,4 @@ download_repos(repos)
 #     print(repo.commits)
 #     print(repo.last_modified)
 
-
-
-
-# def get_github_user_id(username):
-#     """Fetch GitHub user ID based on username."""
-#     url = f"https://api.github.com/users/{username}"
-#     headers = {'Accept': 'application/vnd.github.v3+json'}
-    
-#     try:
-#         response = requests.get(url, headers=headers)
-#         response.raise_for_status()  # Raises an HTTPError if the status is 4XX or 5XX
-#         user_data = response.json()
-#         return user_data.get('id')
-#     except requests.exceptions.RequestException as e:
-#         print(f"Error fetching user data: {e}")
-#         return None
-
-# username = 'sophiasharif'  # Replace 'octocat' with the actual GitHub username
-# user_id = get_github_user_id(username)
-# print(f"User ID for {username}: {user_id}")
 
