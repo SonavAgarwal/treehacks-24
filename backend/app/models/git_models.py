@@ -20,7 +20,7 @@ class GitFile:
         self.relevant_code = []
 
     def __repr__(self):
-        return f"File: {self.path} - {self.num_commits} commits"
+        return f"{self.path}: {self.num_commits} commits\n"
 
 
 class GitCommit:

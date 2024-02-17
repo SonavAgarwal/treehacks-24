@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 import os
@@ -131,14 +132,30 @@ def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
         except subprocess.CalledProcessError as e:
             print(f"Failed to clone {repo.name}: {e}")
 
-    my_var_1 = "hello"
-    my_var_2 = 13924
-    print(f"{my_var_1} exceeds the size limit of {my_var_2} MB. Deleting...")
 
+def process_grep_output(output: str):
+    pattern = re.compile(r'\S+ \(\S+ \S+ \S+ \S+ (\d+)\) (.*)')
+    lines_written = []
+
+    for line in output.strip().split('\n'):
+        match = pattern.match(line)
+        if match:
+            line_number, code_line = match.groups()
+            lines_written.append((int(line_number), code_line))
+
+    code_chunks = []
+    for i in range(len(lines_written)):
+        if i == 0 or lines_written[i][0] != lines_written[i-1][0] + 1:
+            code_chunks.append(lines_written[i][1])
+        else:
+            code_chunks[-1] += '\n' + lines_written[i][1]
+    return code_chunks
 
 def fetch_files(repos, username):
     clone_dir = "/usr/cloned_repos"
-    files_contributed = []  # To store tuples of (file, num_occurrences)
+    res = []
+    
+    # get files changed & number of commits they occur in
     for repo in repos:
         user = repo.url.split('/')[-2]
         repo_path = os.path.join(clone_dir, user, repo.name)
@@ -147,8 +164,9 @@ def fetch_files(repos, username):
         # Constructing the git log command
         git_command = f'git log --author="{username}" --pretty="" ' + \
             '--name-only | sort | uniq -c | sort -rn'
-
-        # Execute the git command
+        
+        # get list of files contributed to
+        files_contributed = []  # To store tuples of (file, num_occurrences)
         try:
             output = subprocess.check_output(
                 git_command, shell=True, text=True)
@@ -159,8 +177,21 @@ def fetch_files(repos, username):
                     num_occurrences, file_name = int(parts[0]), parts[1]
                     files_contributed.append(
                         GitFile(file_name, num_occurrences))
+        
         except subprocess.CalledProcessError as e:
             print(f"Error executing git command: {e}")
+        
+        final_files = []
+        for file in files_contributed:
+          try:
+            blame_command = f'git blame {file.path} | grep "sophiasharif"'
+            output = subprocess.check_output(
+              blame_command, shell=True, text=True)
+            code_chuks = process_grep_output(output)
+            file.relevant_code = code_chuks
+            final_files.append(file)
+          except subprocess.CalledProcessError as e:
+              print(f"File not found: {e}")
 
-    return files_contributed
+    return res
 
