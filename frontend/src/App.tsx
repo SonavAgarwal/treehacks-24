@@ -3,7 +3,7 @@ import { useState } from "react";
 import "./App.css";
 
 function App() {
-	const [name, setName] = useState<string>("SonavAgarwal");
+	const [name, setName] = useState<string>("sophiasharif");
 
 	function fetchHelloWorld(name: string = "SonavAgarwal") {
 		console.log(name);
@@ -12,9 +12,10 @@ function App() {
 			.post("http://localhost:8000/analyze_account", {
 				username: name,
 				queries: [
-					"How well can the candidate work with memory management?",
-					"Is the candidate familiar with regular expressions?",
-					"What databases is the candidate familiar with?",
+					// "How well can the candidate work with low level memory management?",
+					// "Is the candidate familiar with regular expressions?",
+					// "What databases is the candidate familiar with?",
+					"How competent is the programmer with web development?",
 				],
 			})
 			.then((response) => {

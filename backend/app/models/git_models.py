@@ -1,5 +1,7 @@
 class GitRepository:
     def __init__(self, name, url):
+        self.repo_id = None
+
         self.name = name
         self.url = url
         self.description = ""

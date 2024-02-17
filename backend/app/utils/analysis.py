@@ -27,9 +27,18 @@ client = openai.AsyncOpenAI(
 # 3 - get relevant code (sophia) (git blame for relevant files)
 # 3.5 - score the code based on the query (sonav)
 
-async def calculate_relevance(repos, queries):
+async def calculate_relevance(repos: dict[str, GitRepository], queries: dict[str, CodeAnalysisQuery]):
     # split repos into batches of 5
-    batches = [repos[i:i + 5] for i in range(0, len(repos), 5)]
+    batches = []
+    current_batch = {}
+    for repo_id in repos:
+        if len(current_batch) == 1:
+            batches.append(current_batch)
+            current_batch = {}
+        current_batch[repo_id] = repos[repo_id]
+    if len(current_batch) > 0:
+        batches.append(current_batch)
+
     tasks = [evaluate_repo_batch_relevance(
         batch, queries, client) for batch in batches]
     await asyncio.gather(*tasks)
@@ -55,11 +64,11 @@ def score_code(files, queries):
 
 def repo_to_string(repo):
     # shortened_description = await shorten_description(repo.description)
-    string = f"Repo name:{repo.name}\n"
+    string = f"Repo name: {repo.name}\n"
     if (repo.description):
-        string += f"Description:{repo.description}\n"
+        string += f"Description: {repo.description}\n"
     if (len(repo.languages) > 0):
-        string += f"Languages:{', '.join(repo.languages)}\n"
+        string += f"Languages: {', '.join(repo.languages)}\n"
 
     most_useful_commit_messages = []
     for commit in repo.commits:
@@ -78,56 +87,57 @@ def repo_to_string(repo):
     return string
 
 
-async def process_repos(repos):
-    print("Processing repos", flush=True)
+# async def process_repos(repos):
+#     print("Processing repos", flush=True)
 
-    tasks = [shorten_description(repo.description) for repo in repos]
-    descriptions = await asyncio.gather(*tasks)
+#     tasks = [shorten_description(repo.description) for repo in repos]
+#     descriptions = await asyncio.gather(*tasks)
 
-    # Updating repo descriptions with their shortened versions
-    for repo, description in zip(repos, descriptions):
-        repo.description = description
+#     # Updating repo descriptions with their shortened versions
+#     for repo, description in zip(repos, descriptions):
+#         repo.description = description
 
-    return repos
+#     return repos
 
-    # async def process_repo(repo):
-    #     repo.description = await shorten_description(repo.description)
-    #     return repo
+#     # async def process_repo(repo):
+#     #     repo.description = await shorten_description(repo.description)
+#     #     return repo
 
-    # tasks = [process_repo(repo) for repo in repos]
-    # return_repos = await asyncio.gather(*tasks)
-    # return return_repos
-
-
-async def shorten_description(description):
-    print("Shortening description of repo" +
-          description[:10] + "...", flush=True)
-    instructions = f"""
-        You are given a README of a Github repository and asked to shorten it to 200 characters or less.
-        Return the shortened description as a string.
-    """
-    response = await client.chat.completions.create(
-        model=config["MODEL_STRING"],
-        messages=[
-            {
-                "role": "system",
-                "content": instructions
-            }, {
-                "role": "user",
-                "content": description[:200]
-            }
-        ],
-    )
-
-    first_choice = response.choices[0]
-    completion = first_choice.message.content
-    return completion
+#     # tasks = [process_repo(repo) for repo in repos]
+#     # return_repos = await asyncio.gather(*tasks)
+#     # return return_repos
 
 
-async def evaluate_repo_batch_relevance(repos: list[GitRepository], queries, client):
+# async def shorten_description(description):
+#     print("Shortening description of repo" +
+#           description[:10] + "...", flush=True)
+#     instructions = f"""
+#         You are given a README of a Github repository and asked to shorten it to 200 characters or less.
+#         Return the shortened description as a string.
+#     """
+#     response = await client.chat.completions.create(
+#         model=config["MODEL_STRING"],
+#         messages=[
+#             {
+#                 "role": "system",
+#                 "content": instructions
+#             }, {
+#                 "role": "user",
+#                 "content": description[:200]
+#             }
+#         ],
+#     )
+
+#     first_choice = response.choices[0]
+#     completion = first_choice.message.content
+#     return completion
+
+
+async def evaluate_repo_batch_relevance(repos: dict[str, GitRepository], queries: dict[str, CodeAnalysisQuery], client):
     instructions = """
-        You are given multiple Githu repositories and asked to calculate the relevance of each repository to the given queries.
-        Return a json object with a map of query to relevance for each repository as follows:
+        You are given multiple Github repositories and asked to calculate the relevance of each repository to the given queries.
+        Relevance is a score from 0 to 10, where 10 is the most relevant and 0 is the least relevant.
+        Return a JSON object with a map of query to relevance for each repository as follows:
         "repo_N": {
             "query_0": relevance,
             "query_1": relevance,
@@ -138,12 +148,13 @@ async def evaluate_repo_batch_relevance(repos: list[GitRepository], queries, cli
 
     input_string = ""
 
-    for i, query in enumerate(queries):
-        input_string += f"query_{i}: {query.query}\n"
+    for query_id in queries:
+        input_string += f"{query_id}: {queries[query_id].query}\n"
+    input_string += "\n"
 
-    for i, repo in enumerate(repos):
-        input_string += "####repo_ " + str(i) + " ####\n"
-        repo_string = repo_to_string(repo)
+    for repo_id in repos:
+        input_string += f"### {repo_id} ###\n"
+        repo_string = repo_to_string(repos[repo_id])
         input_string += repo_string + "\n"
 
     response = await client.chat.completions.create(
@@ -160,11 +171,14 @@ async def evaluate_repo_batch_relevance(repos: list[GitRepository], queries, cli
         ],
     )
     completion = json.loads(response.choices[0].message.content)
-    print(repo_string, "\n --> \n", completion, "\n\n\n", flush=True)
 
-    for i, repo in enumerate(repos):
-        repo_relevances = completion["repo_" + str(i)]
-        repo.query_relevances = repo_relevances
+    print(input_string, completion, flush=True)
+
+    for repo_id in completion:
+        repo_relevances = completion[repo_id]
+        repo = repos[repo_id]
+        if (repo and repo_relevances):
+            repo.query_relevances = repo_relevances
 
     return
 
@@ -207,19 +221,21 @@ async def evaluate_files_relevance(repo, query, client):
 
 async def construct_queries(queries):
     # TODO: let the model break queries into smaller parts
-    new_queries = []
+    query_map = {}
     for i, query in enumerate(queries):
-        new_query = CodeAnalysisQuery(query_id=i, original_query=query)
-        new_queries.append(new_query)
+        query_id = f"query_{i}"
+        new_query = CodeAnalysisQuery(query_id=query_id, original_query=query)
+        query_map[query_id] = new_query
 
     prompt = """
         You are given a list of queries and asked to rewrite them in a specific format.
         Each query is about analyzing code, and it will be used to search for relevant code.
 
         Examples:
-        Original query: "Can this candidate write complex code in C++?"
+        Original query: "Can this programmer write complex code in C++?"
         Rewritten query: "complex code written in C++"
-        Original query: "How well can this candidate apply data structures and algorithms?"
+
+        Original query: "How well can this programmer apply data structures and algorithms?"
         Rewritten query: "code that applies data structures and algorithms"
 
         Return a JSON object with the following format:
@@ -249,10 +265,13 @@ async def construct_queries(queries):
     )
 
     completion = json.loads(response.choices[0].message.content)
-    for i, query in enumerate(new_queries):
-        query.query = completion.get(f"query_{i}", query.original_query)
 
-    return new_queries
+    for i, query_id in enumerate(query_map):
+        query_map[query_id].query = completion[query_id]
+        print("Original query:",
+              queries[i], "Rewritten query:", completion[query_id], flush=True)
+
+    return query_map
 
 
 def construct_query(query):
