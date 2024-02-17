@@ -1,23 +1,20 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
 import axios from "axios";
+import { useState } from "react";
+import "./App.css";
 
 function App() {
-	const [name, setName] = useState<string>("");
+	const [name, setName] = useState<string>("SonavAgarwal");
 
-	function fetchHelloWorld(name: string) {
+	function fetchHelloWorld(name: string = "SonavAgarwal") {
 		console.log(name);
 		// "http://localhost:8000/analyze_account"
 		return axios
 			.post("http://localhost:8000/analyze_account", {
 				username: name,
 				queries: [
-					"code for web development",
-					"code using object oriented programming",
-					"code applying data structures",
-					"code with low level languages such as Assembly",
+					"How well can the candidate work with memory management?",
+					"Is the candidate familiar with regular expressions?",
+					"What databases is the candidate familiar with?",
 				],
 			})
 			.then((response) => {

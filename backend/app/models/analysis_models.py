@@ -12,16 +12,17 @@ CODE_ANALYSIS_TYPES = ["structure", "complexity",
 
 
 class CodeAnalysisQuery:
-    def __init__(self, query):
-        self.query = query
+    def __init__(self, query_id, original_query):
+        self.query_id = query_id
+        self.original_query = original_query
+
+        self.query = ""
         self.query_type = ""
 
-        self.repos = []
-        self.files = []
-        self.best_repos = []
-        self.best_files = []
-
-        self.score = -1  # unset
+        # self.repos = []
+        # self.files = []
+        # self.best_repos = []
+        # self.best_files = []
 
 # ===========================
 # tools are things like libraries, frameworks, and languages

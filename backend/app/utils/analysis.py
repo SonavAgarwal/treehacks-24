@@ -4,6 +4,8 @@ import os
 import openai
 # from config import config
 import asyncio
+from app.models.analysis_models import *
+from app.utils.github import *
 
 config = {
     "MODEL_STRING": "mistralai/Mistral-7B-Instruct-v0.1"
@@ -12,7 +14,7 @@ config = {
 load_dotenv()
 together_key = os.getenv("TOGETHER_KEY")
 
-client = openai.OpenAI(
+client = openai.AsyncOpenAI(
     base_url="https://api.together.xyz/v1",
     api_key=together_key)
 
@@ -26,10 +28,13 @@ client = openai.OpenAI(
 # 3.5 - score the code based on the query (sonav)
 
 async def calculate_relevance(repos, queries):
-    tasks = [evaluate_repo_relevance(
-        repo, queries, client) for repo in repos]
-    return_repos = await asyncio.gather(*tasks)
-    return return_repos
+    # split repos into batches of 5
+    batches = [repos[i:i + 5] for i in range(0, len(repos), 5)]
+    tasks = [evaluate_repo_batch_relevance(
+        batch, queries, client) for batch in batches]
+    await asyncio.gather(*tasks)
+
+    return
 
 
 def find_relevant_files(repos, query):
@@ -101,7 +106,7 @@ async def shorten_description(description):
         You are given a README of a Github repository and asked to shorten it to 200 characters or less.
         Return the shortened description as a string.
     """
-    response = client.chat.completions.create(
+    response = await client.chat.completions.create(
         model=config["MODEL_STRING"],
         messages=[
             {
@@ -119,21 +124,29 @@ async def shorten_description(description):
     return completion
 
 
-async def evaluate_repo_relevance(repo, queries, client):
+async def evaluate_repo_batch_relevance(repos: list[GitRepository], queries, client):
     instructions = """
-        You are given a Github repository and asked to calculate the relevance of the repository to the given queries.
-        For each query the relevance in a JSON object as follows: "query_N": relevance. 0 <= relevance <= 10
+        You are given multiple Githu repositories and asked to calculate the relevance of each repository to the given queries.
+        Return a json object with a map of query to relevance for each repository as follows:
+        "repo_N": {
+            "query_0": relevance,
+            "query_1": relevance,
+            ...
+        }
+        where 0 <= relevance <= 10
         """
 
     input_string = ""
 
-    repo_string = repo_to_string(repo)
-    input_string += repo_string + "\n"
-
     for i, query in enumerate(queries):
         input_string += f"query_{i}: {query.query}\n"
 
-    response = client.chat.completions.create(
+    for i, repo in enumerate(repos):
+        input_string += "####repo_ " + str(i) + " ####\n"
+        repo_string = repo_to_string(repo)
+        input_string += repo_string + "\n"
+
+    response = await client.chat.completions.create(
         model=config["MODEL_STRING"],
         response_format={"type": "json_object"},
         messages=[
@@ -148,7 +161,12 @@ async def evaluate_repo_relevance(repo, queries, client):
     )
     completion = json.loads(response.choices[0].message.content)
     print(repo_string, "\n --> \n", completion, "\n\n\n", flush=True)
-    return (repo, completion)
+
+    for i, repo in enumerate(repos):
+        repo_relevances = completion["repo_" + str(i)]
+        repo.query_relevances = repo_relevances
+
+    return
 
 
 async def evaluate_files_relevance(repo, query, client):
@@ -168,7 +186,7 @@ async def evaluate_files_relevance(repo, query, client):
     for file in files:
         input_string += f"{file}\n"
 
-    response = client.chat.completions.create(
+    response = await client.chat.completions.creaate(
         model=config["MODEL_STRING"],
         response_format={"type": "json_object"},
         messages=[
@@ -185,6 +203,60 @@ async def evaluate_files_relevance(repo, query, client):
     completion = json.loads(response.choices[0].message.content)
 
     return completion
+
+
+async def construct_queries(queries):
+    # TODO: let the model break queries into smaller parts
+    new_queries = []
+    for i, query in enumerate(queries):
+        new_query = CodeAnalysisQuery(query_id=i, original_query=query)
+        new_queries.append(new_query)
+
+    prompt = """
+        You are given a list of queries and asked to rewrite them in a specific format.
+        Each query is about analyzing code, and it will be used to search for relevant code.
+
+        Examples:
+        Original query: "Can this candidate write complex code in C++?"
+        Rewritten query: "complex code written in C++"
+        Original query: "How well can this candidate apply data structures and algorithms?"
+        Rewritten query: "code that applies data structures and algorithms"
+
+        Return a JSON object with the following format:
+        {
+            "query_0": "Query 0 rewritten ...",
+            "query_1": "Query 1 rewritten ...",
+            ...
+        }
+    """
+
+    input_string = ""
+    for i, query in enumerate(queries):
+        input_string += f"query_{i}: {query}\n"
+
+    response = await client.chat.completions.create(
+        model=config["MODEL_STRING"],
+        response_format={"type": "json_object"},
+        messages=[
+            {
+                "role": "system",
+                "content": prompt
+            }, {
+                "role": "user",
+                "content": input_string
+            }
+        ],
+    )
+
+    completion = json.loads(response.choices[0].message.content)
+    for i, query in enumerate(new_queries):
+        query.query = completion.get(f"query_{i}", query.original_query)
+
+    return new_queries
+
+
+def construct_query(query):
+    return CodeAnalysisQuery(query=query)
 
 
 # # repos will be ()

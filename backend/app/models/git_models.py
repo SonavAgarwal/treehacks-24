@@ -7,6 +7,10 @@ class GitRepository:
         self.files = []
         self.commits = []
 
+        # query scores
+        # maps from query name to scores
+        self.query_relevances = {}
+
 
 class GitFile:
     def __init__(self, name, path, url):
