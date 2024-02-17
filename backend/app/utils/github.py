@@ -26,9 +26,10 @@ class GitRepository:
         self.name = name
         self.url = url
         self.description = ""
-        self.languages = []
+        self.languages = [] # TODO: sort this by frequency or something (just a list of strings for now)
         self.files = []
         self.commits = []
+        self.last_modified = None
 
 
 class GitFile:
@@ -56,14 +57,15 @@ def create_repository_objects(query_outputs):
         repo.description = repo_data['description'] if repo_data['description'] else ""
         repo.languages = [lang['node']['name'] for lang in repo_data['languages']['edges']]
         repo.commits = [GitCommit(commit['node']['oid'], commit['node']['message'], commit['node']['committedDate']) for commit in repo_data['defaultBranchRef']['target']['history']['edges']]
+        repo.last_modified = repo.commits[0].date
         repositories.append(repo)
     return repositories
 
 
 def fetch_repos(user_username):
     url = 'https://api.github.com/graphql'
-    access_token = os.getenv("GITHUB_TOKEN")
-    query = """
+    access_token = os.getenv("GITHUB_TOKEN") # TODO: update the query so that only commits the user has made are fetched
+    query = """ 
     {
       user(login: "%s") {
         repositories(first: 100) {
@@ -159,14 +161,15 @@ def fetch_files(repos):
 # download_repos(repos)
 
 
-# fetch_repos("sophiasharif")
-# user_repos = fetch_repos("sophiasharif")
-# for repo in user_repos:
-#     print("REPO ", repo.name)
-#     print(repo.url)
-#     print(repo.description)
-#     print(repo.languages)
-#     print(repo.commits)
+fetch_repos("sophiasharif")
+user_repos = fetch_repos("sophiasharif")
+for repo in user_repos:
+    print("REPO ", repo.name)
+    print(repo.url)
+    print(repo.description)
+    print(repo.languages)
+    print(repo.commits)
+    print(repo.last_modified)
 
 
 
