@@ -14,10 +14,11 @@ function App() {
 			.post("http://localhost:8000/analyze_account", {
 				username: name,
 				queries: [
-					"How well can the candidate work with low level memory management?",
+					// "How well can the candidate work with low level memory management?",
 					// "Is the candidate familiar with regular expressions?",
 					// "What databases is the candidate familiar with?",
 					"How competent is the programmer with web development?",
+					"How competent is the programmer with C++?",
 					// "Can the candidate set up an authentication system?",
 				],
 			})

@@ -6,9 +6,11 @@ class GitRepository:
         self.url = url
         self.description = ""
         self.languages = []
-        self.files = []
+        self.files = {}
         self.commits = []
         self.last_modified = None
+
+        self.local_path = None
 
         # query scores
         self.query_relevances = {}
@@ -21,8 +23,11 @@ class GitFile:
         self.score = 0
         self.relevant_code = []
 
+        self.repo = None
+
     def __repr__(self):
-        return f"{self.path}: {self.num_commits} commits\n"
+        repo_path = self.repo.local_path
+        return f"{repo_path}/{self.path}: {self.num_commits} commits\n"
 
 
 class GitCommit:

@@ -39,7 +39,22 @@ async def analyze_account(body: AnalyzeAccountRequest):
     repos: dict[str, GitRepository] = {
         repo.repo_id: repo for repo in repos_list}
 
+    # print the queries
+    print("FOUND THESE QUERIES", flush=True)
+    for query_id, query in queries.items():
+        print("===========", flush=True)
+        print(query_id, query.query, flush=True)
+        for criterion in query.rubric.attributes:
+            print(criterion.name, criterion.criterion,
+                  criterion.weight, flush=True)
+
     print("Fetched repos and queries", flush=True)
+
+    print("FOUND THIS MANY REPOS", len(repos_list), flush=True)
+
+    for repo in repos_list:
+        print("===========", flush=True)
+        print(repo.name, repo.description, flush=True)
 
     await calculate_relevance(repos, queries)
 
@@ -91,8 +106,58 @@ async def analyze_account(body: AnalyzeAccountRequest):
 
         for repo in sorted_repos:
             print(repo.name, repo.query_relevances[query_id], flush=True)
+            query.relevant_repos[repo.repo_id] = repo
 
         repos_to_download.update(sorted_repos)
+
+    repos = list(repos_to_download)
+    temp = [repo.name for repo in repos_to_download]
+    print("REPOS TO DOWNLOAD\n\n", temp, flush=True)
+
+    successfully_cloned = download_repos(repos, queries, username)
+
+    print("Successfully cloned", flush=True)
+
+    # now we have all the repos and the files that may potentially be relevant
+
+    # now, of those files, we want to find the most relevant ones
+    # we will first keep only the ones that the user has contributed a lot to
+
+    print("Fetching files", flush=True)
+    fetch_files(successfully_cloned, username)
+    print("Fetched files", flush=True)
+    for repo in successfully_cloned:
+        for file_path, file in repo.files.items():
+            print(file_path, file.num_commits, flush=True)
+
+    # we will send the file paths to LLM, and it will return the most relevant ones
+
+    print("finding relevant file paths", flush=True)
+    print("we have this many queries", len(queries), flush=True)
+    await find_relevant_files(queries)
+    print("found relevant file paths", flush=True)
+    for query_id, query in queries.items():
+        print("===========", flush=True)
+        print(query_id, query.query, flush=True)
+        print(query.eval_files, flush=True)
+
+    # now we have a list of relevant files for each query
+    # we will look through the chunks of code in those files and send them to LLM
+    # llm will take in attributes we're looking for and score the code on said attributes
+    # we will pick a few chunks of code that have the highest scores
+
+    print("finding relevant code", flush=True)
+    final_query_responses = await eval_queries(queries)
+    response_obj = AnalyzeAccountResponse()
+    response_obj.username = username
+    for query_response in final_query_responses:
+        response_obj.queries[query_response.query_id] = query_response
+
+    # for each query, we'll send the best chunks to the frontend along with other metadata
+    # done
+
+    # delete repos
+    delete_repos(successfully_cloned, username)
 
     # return
 
@@ -104,5 +169,5 @@ async def analyze_account(body: AnalyzeAccountRequest):
     #     print("===========", flush=True)
     #     print(query_id, query.query, flush=True)
 
-    return None
+    return response_obj
     # return repo_and_scores
