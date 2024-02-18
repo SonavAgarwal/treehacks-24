@@ -215,15 +215,27 @@ export const Dashboard = () => {
 
 	return (
 		<div className="page-container center">
-			<div className="profile-input glasscard">
-				<div className="heading-subheading">
+			<div
+				className="profile-input glasscard"
+				style={{
+					gap: "unset",
+				}}
+			>
+				<div
+					className="heading-subheading"
+					style={{
+						marginBottom: "2rem",
+					}}
+				>
 					<h1>
 						{" "}
-						<img src={sparkles} alt="sparkles" /> Evaluate a new applicant
+						<img src={sparkles} alt="sparkles" /> Evaluate a New Applicant
 					</h1>
 					<p>
-						By copying a GitHub link, Git Good extracts the desired qualities of
-						candidates to analyze qualifications for a position application.
+						GitGuage combs through GitHub profiles and analyzes them based on
+						customizable criteria. This tool is designed to help employers and
+						hiring managers quickly and effectively evaluate candidates'
+						qualifications and skills.
 					</p>
 				</div>
 				<AnimateHeight
@@ -295,12 +307,14 @@ export const Dashboard = () => {
 							justifyContent: "center",
 						}}
 					>
-						<ThreeDots color="#0258FF" height={50} width={50} />
+						<ThreeDots color="#0258FF" height={30} width={100} />
 						<h2
 							style={{
-								color: "black",
+								color: "gray",
+								fontWeight: "normal",
 								textAlign: "center",
 								marginTop: "1rem",
+								fontStyle: "italic",
 							}}
 						>
 							{updateString}

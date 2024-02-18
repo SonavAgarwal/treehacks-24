@@ -16,8 +16,8 @@ const QueryResponseCard = (props: Props) => {
 			}}
 		>
 			<div className="heading-subheading">
-				<h1>{props.queryResponse.query}</h1>
-				{/* <p>{props.queryResponse.query}</p> */}
+				{/* <h1>{props.queryResponse.query}</h1> */}
+				<h2>{props.queryResponse.query}</h2>
 			</div>
 			<div
 				style={{
