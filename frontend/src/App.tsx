@@ -3,6 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import axios from "axios";
+import { Dashboard } from "./components/Dashboard";
 
 function App() {
 	const [name, setName] = useState<string>("");
@@ -25,23 +26,24 @@ function App() {
 	}
 
 	return (
-		<>
-			<div>
-				<h1>Hello World</h1>
-				<input
-					type="text"
-					value={name}
-					onChange={(e) => setName(e.target.value)}
-				/>
-				<button
-					onClick={() => {
-						fetchHelloWorld();
-					}}
-				>
-					Fetch
-				</button>
-			</div>
-		</>
+		// <>
+		// 	<div>
+		// 		<h1>Hello World</h1>
+		// 		<input
+		// 			type="text"
+		// 			value={name}
+		// 			onChange={(e) => setName(e.target.value)}
+		// 		/>
+		// 		<button
+		// 			onClick={() => {
+		// 				fetchHelloWorld();
+		// 			}}
+		// 		>
+		// 			Fetch
+		// 		</button>
+		// 	</div>
+		// </>
+		<Dashboard/>
 	);
 }
 
