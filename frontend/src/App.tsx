@@ -1,27 +1,33 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
 import axios from "axios";
+import { useState } from "react";
+import "./App.css";
 
 function App() {
-	const [name, setName] = useState<string>("");
+	const [name, setName] = useState<string>("sophiasharif");
 
-	function fetchHelloWorld() {
+	function fetchHelloWorld(name: string = "SonavAgarwal") {
+		console.log(name);
 		// "http://localhost:8000/analyze_account"
 		return axios
 			.post("http://localhost:8000/analyze_account", {
-				files: [
-					"filter_blind_alleys.ml",
-					"find_the_cheese.js",
-					"meow.hs",
-					"help.tsx",
+				username: name,
+				queries: [
+					// "How well can the candidate work with low level memory management?",
+					// "Is the candidate familiar with regular expressions?",
+					// "What databases is the candidate familiar with?",
+					"How competent is the programmer with web development?",
+					// "Can the candidate set up an authentication system?",
 				],
-				query: "code that uses functional programming",
 			})
 			.then((response) => {
 				console.log(response);
 			});
+	}
+
+	function sophiaFunction() {
+		return axios.get("http://localhost:8000/testing").then((response) => {
+			console.log(response);
+		});
 	}
 
 	return (
@@ -35,10 +41,17 @@ function App() {
 				/>
 				<button
 					onClick={() => {
-						fetchHelloWorld();
+						fetchHelloWorld(name);
 					}}
 				>
 					Fetch
+				</button>
+				<button
+					onClick={() => {
+						sophiaFunction();
+					}}
+				>
+					Sophia button
 				</button>
 			</div>
 		</>
