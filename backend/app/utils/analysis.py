@@ -8,19 +8,19 @@ from app.models.analysis_models import *
 from app.utils.github import *
 
 config = {
-    # "MODEL_STRING": "mistralai/Mistral-7B-Instruct-v0.1"
-    "MODEL_STRING": "gpt-3.5-turbo"
+    "MODEL_STRING": "mistralai/Mistral-7B-Instruct-v0.1"
+    # "MODEL_STRING": "gpt-3.5-turbo"
 }
 
 load_dotenv()
 together_key = os.getenv("TOGETHER_KEY")
 
-# client = openai.AsyncOpenAI(
-#     base_url="https://api.together.xyz/v1",
-#     api_key=together_key)
 client = openai.AsyncOpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+    base_url="https://api.together.xyz/v1",
+    api_key=together_key)
+# client = openai.AsyncOpenAI(
+#     api_key=os.getenv("OPENAI_API_KEY")
+# )
 
 
 # api function calls these in order
