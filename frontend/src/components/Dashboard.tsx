@@ -3,6 +3,7 @@ import "./Dashboard.css";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { Strength } from "./Strength";
+import { Chat } from "./Chat";
 import sparkles from "../assets/sparkles.svg";
 
 export const Dashboard = () => {
@@ -81,7 +82,7 @@ export const Dashboard = () => {
 
       {isProfileAnalyzed && githubURL.startsWith("github.com/") && (
         <div className="analysis-container">
-          
+
           <div className="heading-subheading">
             <h2>Profile Strengths</h2>
             <p>Describe what the profile section does here.</p>
@@ -90,6 +91,7 @@ export const Dashboard = () => {
           <Strength text="Code Quality"/>
         </div>
       )}
+      <Chat placeholder="Type a message..."/>
     </div>
   );
 };
