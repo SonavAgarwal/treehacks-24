@@ -8,15 +8,19 @@ from app.models.analysis_models import *
 from app.utils.github import *
 
 config = {
-    "MODEL_STRING": "mistralai/Mistral-7B-Instruct-v0.1"
+    # "MODEL_STRING": "mistralai/Mistral-7B-Instruct-v0.1"
+    "MODEL_STRING": "gpt-3.5-turbo"
 }
 
 load_dotenv()
 together_key = os.getenv("TOGETHER_KEY")
 
+# client = openai.AsyncOpenAI(
+#     base_url="https://api.together.xyz/v1",
+#     api_key=together_key)
 client = openai.AsyncOpenAI(
-    base_url="https://api.together.xyz/v1",
-    api_key=together_key)
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
 
 # api function calls these in order
@@ -32,7 +36,7 @@ async def calculate_relevance(repos: dict[str, GitRepository], queries: dict[str
     batches = []
     current_batch = {}
     for repo_id in repos:
-        if len(current_batch) == 1:
+        if len(current_batch) == 5:
             batches.append(current_batch)
             current_batch = {}
         current_batch[repo_id] = repos[repo_id]
@@ -79,7 +83,8 @@ def repo_to_string(repo):
         lower_message = commit.message.lower()
         starts_with_merge = lower_message.startswith("merge")
         starts_with_update = lower_message.startswith("update")
-        if not starts_with_merge and not starts_with_update and len(commit.message) > 10:
+        starts_with_initial = lower_message.startswith("initial")
+        if not starts_with_merge and not starts_with_update and not starts_with_initial and len(commit.message) > 10:
             most_useful_commit_messages.append(commit.message)
     if len(most_useful_commit_messages) > 0:
         commits = "\n".join(most_useful_commit_messages)
@@ -133,10 +138,12 @@ def repo_to_string(repo):
 #     return completion
 
 
-async def evaluate_repo_batch_relevance(repos: dict[str, GitRepository], queries: dict[str, CodeAnalysisQuery], client):
+async def evaluate_repo_batch_relevance(repos: dict[str, GitRepository], queries: dict[str, CodeAnalysisQuery], client: openai.AsyncOpenAI):
     instructions = """
         You are given multiple Github repositories and asked to calculate the relevance of each repository to the given queries.
         Relevance is a score from 0 to 10, where 10 is the most relevant and 0 is the least relevant.
+        Repositories are relevant if they have the chance to contain key words, key languages, key technologies, or key concepts that are relevant to the queries.
+        Repositories can be relevant to multiple queries.
         Return a JSON object with a map of query to relevance for each repository as follows:
         "repo_N": {
             "query_0": relevance,
@@ -148,14 +155,15 @@ async def evaluate_repo_batch_relevance(repos: dict[str, GitRepository], queries
 
     input_string = ""
 
-    for query_id in queries:
-        input_string += f"{query_id}: {queries[query_id].query}\n"
-    input_string += "\n"
-
     for repo_id in repos:
         input_string += f"### {repo_id} ###\n"
         repo_string = repo_to_string(repos[repo_id])
         input_string += repo_string + "\n"
+
+    input_string += "### queries ###:\n"
+    for query_id in queries:
+        input_string += f"{query_id}: {queries[query_id].query}\n"
+    input_string += "\n"
 
     response = await client.chat.completions.create(
         model=config["MODEL_STRING"],
@@ -163,12 +171,17 @@ async def evaluate_repo_batch_relevance(repos: dict[str, GitRepository], queries
         messages=[
             {
                 "role": "system",
+                "content": "You are a software analyst who is familiar with Github repositories and tasked with finding repositories that are relevant to queries."
+            },
+            {
+                "role": "user",
                 "content": instructions
             }, {
                 "role": "user",
                 "content": input_string
             }
         ],
+        # temperature=0.3,
     )
     completion = json.loads(response.choices[0].message.content)
 
@@ -227,16 +240,24 @@ async def construct_queries(queries):
         new_query = CodeAnalysisQuery(query_id=query_id, original_query=query)
         query_map[query_id] = new_query
 
+    #     new_query.query = query
+
+    # return query_map
+
     prompt = """
         You are given a list of queries and asked to rewrite them in a specific format.
         Each query is about analyzing code, and it will be used to search for relevant code.
-
+        Limit the length of the rewritten query to 200 characters.
+        
         Examples:
         Original query: "Can this programmer write complex code in C++?"
-        Rewritten query: "complex code written in C++"
+        Rewritten query: "complex code written in C++."
 
         Original query: "How well can this programmer apply data structures and algorithms?"
-        Rewritten query: "code that applies data structures and algorithms"
+        Rewritten query: "code that applies data structures and algorithms."
+
+        Original query: "What is the quality of this programmer's code?"
+        Rewritten query: "quality of code."
 
         Return a JSON object with the following format:
         {
@@ -267,6 +288,7 @@ async def construct_queries(queries):
     completion = json.loads(response.choices[0].message.content)
 
     for i, query_id in enumerate(query_map):
+        # query_map[query_id].query = query_map[query_id].original_query
         query_map[query_id].query = completion[query_id]
         print("Original query:",
               queries[i], "Rewritten query:", completion[query_id], flush=True)

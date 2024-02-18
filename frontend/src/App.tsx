@@ -16,6 +16,7 @@ function App() {
 					// "Is the candidate familiar with regular expressions?",
 					// "What databases is the candidate familiar with?",
 					"How competent is the programmer with web development?",
+					// "Can the candidate set up an authentication system?",
 				],
 			})
 			.then((response) => {

@@ -74,7 +74,13 @@ async def analyze_account(body: AnalyzeAccountRequest):
 
         # remove repos that haven't been updated in the last 3 years
         sorted_repos = [repo for repo in sorted_repos if repo.last_modified >
-                        datetime.now() - timedelta(days=365 * 3)]
+                        datetime.now() - timedelta(days=(365 * 3))]
+
+        print("After removing old repos", len(sorted_repos), flush=True)
+        for repo in sorted_repos:
+            print(repo.name, repo.query_relevances[query_id], flush=True)
+        print("\n\n", flush=True)
+
         sorted_repos = [
             repo for repo in sorted_repos if repo.query_relevances[query_id] > MIN_RELEVANCE]
 
@@ -88,17 +94,15 @@ async def analyze_account(body: AnalyzeAccountRequest):
 
         repos_to_download.update(sorted_repos)
 
-    return
+    # return
 
-    for i, query in enumerate(queries):
-        query_str = "query_" + str(i)
-        sorted_repos = sorted(
-            repo_and_scores, key=lambda x: x[1][query_str], reverse=True)
-        for repo, score in sorted_repos[:3]:
-            relevant_repos.add(repo)
-        print(query.query, ":", ", ".join([
-              repo.name for repo, scores in sorted_repos[:3]]), flush=True)
+    # eval_repos = list(repos_to_download)
 
-    # download_repos(repo_and_scores)
+    # download_repos(eval_repos)
 
-    return repo_and_scores
+    # for query_id, query in queries.items():
+    #     print("===========", flush=True)
+    #     print(query_id, query.query, flush=True)
+
+    return None
+    # return repo_and_scores
