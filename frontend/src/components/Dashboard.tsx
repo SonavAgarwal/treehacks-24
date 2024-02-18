@@ -5,6 +5,18 @@ import { Input } from "./Input";
 import { Strength } from "./Strength";
 import sparkles from "../assets/sparkles.svg";
 
+interface SampleData {
+  strength: string;
+  score: number;
+}
+
+const sampleData: SampleData[] = [
+  { strength: "Code Quality", score: 8 },
+  { strength: "Data Structures", score: 6 },
+  { strength: "Shell Scripting", score: 7 },
+  { strength: "Functional Programming", score: 3 },
+];
+
 export const Dashboard = () => {
   const [githubURL, setGithubURL] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -45,8 +57,8 @@ export const Dashboard = () => {
             <img src={sparkles} alt="sparkles" /> Evaluate a new applicant
           </h1>
           <p>
-            By copying a GitHub link, Git Good extracts the desired qualities
-            of candidates to analyze qualifications for a position application.
+            By copying a GitHub link, Git Good extracts the desired qualities of
+            candidates to analyze qualifications for a position application.
           </p>
         </div>
         <div className="inner-container">
@@ -79,17 +91,21 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {isProfileAnalyzed && githubURL.startsWith("github.com/") && (
+      {/* isProfileAnalyzed && githubURL.startsWith("github.com/") &&  */}
+      {
         <div className="analysis-container">
-          
           <div className="heading-subheading">
             <h2>Profile Strengths</h2>
             <p>Describe what the profile section does here.</p>
           </div>
 
-          <Strength text="Code Quality"/>
+          <div className="strengths">
+            {sampleData.map((data) => {
+              return <Strength strength={data.strength} score={data.score} />;
+            })}
+          </div>
         </div>
-      )}
+      }
     </div>
   );
 };

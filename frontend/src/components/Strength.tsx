@@ -1,19 +1,17 @@
 import React from "react";
-import './Strength.css'
+import "./Strength.css";
 import { Bar } from "./Bar";
 
+interface StrengthProps {
+  strength: string;
+  score: number;
+}
 
-export const Strength = (props) => {
-  const bruh = props.text;
-
+export const Strength = (props: StrengthProps) => {
   return (
     <div className="strength-container">
-      <h2>{bruh}</h2>
-
-      <h2>hihi</h2>
-
-      <Bar >ok</Bar>  
-
+      <h2>{props.strength}</h2>
+      <Bar score={props.score} />
     </div>
   );
 };
