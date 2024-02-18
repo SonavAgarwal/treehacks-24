@@ -742,6 +742,7 @@ def uncook_json(data):
             for score, s in all_scores[:length]:
                 top_snippets.append(s)
                 total_score += score / length
+            random.shuffle(top_snippets)
             
             if total_score == 0:
                 total_score = gaussian()
