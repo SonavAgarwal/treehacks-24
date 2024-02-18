@@ -709,9 +709,8 @@ def uncook_json(data):
             result.append(new_query_obj)
             continue
 
-
         # iterate through rubric and score each attribute
-        
+
         rubric = snippets[0]['rubric_attributes']
         query_attribute_details = []
 
@@ -740,7 +739,7 @@ def uncook_json(data):
             total_score = 0
             for score, s in all_scores[:length]:
                 top_snippets.append(s)
-                total_score += score / length
+                total_score += score / length * 10
 
             attribute = {
                 'name': name,
@@ -763,7 +762,6 @@ def uncook_json(data):
         print(total_score)
         print(total_weight)
 
-        
         new_query_obj['details'] = query_attribute_details
         new_query_obj['score'] = int(total_score / total_weight * 10)
         result.append(new_query_obj)
