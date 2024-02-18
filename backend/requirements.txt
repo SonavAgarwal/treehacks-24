@@ -4,3 +4,4 @@ together
 python-dotenv
 openai
 aiohttp
+firebase_admin

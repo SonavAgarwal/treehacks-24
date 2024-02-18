@@ -1,12 +1,22 @@
 from datetime import datetime, timedelta
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
 from app.utils.analysis import *
 from app.utils.github import *
 from app.models.analysis_models import *
 from asyncio import gather
 from operator import attrgetter
+
+import firebase_admin
+from firebase_admin import credentials, firestore
+from app.utils.fsa import *
+
+# print the cwd
+print("CWD", os.getcwd(), flush=True)
+cred = credentials.Certificate(firebaseCreds)
+firebaseapp = firebase_admin.initialize_app(cred)
+firestore_client = firestore.client()
 
 
 router = APIRouter()
@@ -19,17 +29,41 @@ class AnalyzeAccountRequest(BaseModel):
 
 
 @router.post("/analyze_account")
-async def analyze_account(body: AnalyzeAccountRequest):
+async def analyze_account(background_tasks: BackgroundTasks, body: AnalyzeAccountRequest):
     username = body.username
     queries = body.queries
     criteria = body.criteria
 
+    # create a document in firestore at /analysis-jobs/autoid
+    # with an empty array called "updates"
+    # field status: "pending"
+
+    doc_ref = firestore_client.collection("analysis-jobs").document()
+    doc_ref.set({
+        "status": "pending",
+        "updates": [],
+    })
+
+    # start the analysis in the background
+    background_tasks.add_task(run_analysis, username,
+                              queries, criteria, doc_ref)
+
+    doc_id = doc_ref.id
+    return doc_id
+
+
+async def run_analysis(username: str, queries: List[str], criteria: List[str], doc_ref: firebase_admin.firestore.DocumentReference):
+
     print("Analyzing account", username, flush=True)
+
+    add_update(doc_ref, f"Fetching repos for {username}")
 
     # Schedule both tasks to run in parallel
     queries_task = construct_queries(queries)
     repos_task = fetch_repos(username)
     completed_tasks = await gather(queries_task, repos_task)
+
+    add_update(doc_ref, "Analyzing queries")
 
     # Unpack the results
     queries: dict[str, CodeAnalysisQuery] = completed_tasks[0]
@@ -56,19 +90,11 @@ async def analyze_account(body: AnalyzeAccountRequest):
         print("===========", flush=True)
         print(repo.name, repo.description, flush=True)
 
+    add_update(doc_ref, "Finding most relevant repos")
+
     await calculate_relevance(repos, queries)
 
     print("Calculated relevance", flush=True)
-
-    # for repo in repos_list:
-    #     print("===========", flush=True)
-    #     print(repo.name, repo.description, flush=True)
-    #     print(repo.query_relevances, flush=True)
-
-    # download relevant repos
-
-    # for each query, determine the 3 best repos for that query
-    # download the relevant files for each repo
 
     # TODO: PICK MORE RELEVANT REPOS BASED ON HOW MUCH YOU'VE CONTRIBUTED, ETC
     # TODO: CUT REPOS WITH VERY LITTLE CODE
@@ -80,6 +106,8 @@ async def analyze_account(body: AnalyzeAccountRequest):
     MIN_RELEVANCE = 7
 
     repos_to_download = set()
+
+    add_update(doc_ref, "Downloading most relevant repos")
 
     for query_id, query in queries.items():
         print("===========", flush=True)
@@ -114,7 +142,7 @@ async def analyze_account(body: AnalyzeAccountRequest):
     temp = [repo.name for repo in repos_to_download]
     print("REPOS TO DOWNLOAD\n\n", temp, flush=True)
 
-    successfully_cloned = download_repos(repos, queries, username)
+    successfully_cloned = download_repos(repos, queries, username, doc_ref)
 
     print("Successfully cloned", flush=True)
 
@@ -124,7 +152,7 @@ async def analyze_account(body: AnalyzeAccountRequest):
     # we will first keep only the ones that the user has contributed a lot to
 
     print("Fetching files", flush=True)
-    fetch_files(successfully_cloned, username)
+    fetch_files(successfully_cloned, username, doc_ref)
     print("Fetched files", flush=True)
     for repo in successfully_cloned:
         for file_path, file in repo.files.items():
@@ -134,6 +162,7 @@ async def analyze_account(body: AnalyzeAccountRequest):
 
     print("finding relevant file paths", flush=True)
     print("we have this many queries", len(queries), flush=True)
+    add_update(doc_ref, "Filtering relevant files")
     await find_relevant_files(queries)
     print("found relevant file paths", flush=True)
     for query_id, query in queries.items():
@@ -147,6 +176,7 @@ async def analyze_account(body: AnalyzeAccountRequest):
     # we will pick a few chunks of code that have the highest scores
 
     print("finding relevant code", flush=True)
+    add_update(doc_ref, "Evaluating queries on relevant files")
     final_query_responses = await eval_queries(queries)
     response_obj = AnalyzeAccountResponse()
     response_obj.username = username
@@ -157,6 +187,7 @@ async def analyze_account(body: AnalyzeAccountRequest):
     # done
 
     # delete repos
+    add_update(doc_ref, "Cleaning up")
     delete_repos(successfully_cloned, username)
 
     # return
@@ -176,5 +207,12 @@ async def analyze_account(body: AnalyzeAccountRequest):
 
     new_json = uncook_json(json_loaded)
 
-    return new_json
+    doc_ref.update({
+        "status": "complete",
+        # append the "Done" message to the "updates" array
+        "updates": firebase_admin.firestore.ArrayUnion(["Done analyzing!"]),
+        "data": new_json,
+    })
+
+    # return new_json
     # return repo_and_scores

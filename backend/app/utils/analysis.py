@@ -615,65 +615,6 @@ def construct_query(query):
     return CodeAnalysisQuery(query=query)
 
 
-# # repos will be ()
-
-# # ===========================
-# # find_best_repos(repos, query)
-# # repos[]: list of repos
-
-# # ===========================
-
-
-# def find_best_repos(repos, query):
-#     return None
-
-# # ===========================
-# # find_best_filenames(file_names, query)
-# # ===========================
-
-
-# def find_best_filenames(filenames, query):
-#     prompt = f"""
-#         You are looking for files that are most relevant to the given query, and returning a score for each file in JSON format.
-#         For each file, score it from 1 to 10 based on how likely it is to be relevant to the query.
-#         The higher the score, the more relevant the file is.
-#         If you are not sure, set score to -1.
-#         For example:
-#         query: code that uses axios
-#         files: main.js, api.js, index.js, package.json, README.md
-#         would be converted to:
-#         {{
-#             scores: {{
-#                 "main.js": 7,
-#                 "api.js": 9,
-#                 "index.js": 4,
-#                 "package.json": 0,
-#                 "README.md": 0,
-#             }}
-#         }}
-#     """
-
-#     print(prompt)
-
-#     response = client.chat.completions.create(
-#         model=config["MODEL_STRING"],
-#         messages=[
-#             {
-#                 "role": "system",
-#                 "content": prompt
-#             }, {
-#                 "role": "user",
-#                 "content": f"query: {query}\nfiles: {', '.join(filenames)}"
-#             }
-#         ],
-#         response_format={
-#             "type": "json_object",
-#         }
-#     )
-
-#     return response
-
-
 def serialize_obj(obj):
     """Recursively convert a Python object to something JSON-serializable."""
     if hasattr(obj, "__dict__"):

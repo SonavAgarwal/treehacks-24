@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import sparkles from "../assets/sparkles.svg";
 import { sendAnalysisRequest } from "../data";
@@ -7,6 +7,8 @@ import "./Dashboard.css";
 import QueryResponseCard from "./QueryResponseCard";
 import AnimateHeight from "react-animate-height";
 import { ThreeCircles, ThreeDots } from "react-loader-spinner";
+import { db } from "../firebase";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 
 const QUERY_OPTIONS = [
 	{
@@ -182,6 +184,34 @@ export const Dashboard = () => {
 	const [hasFetched, setHasFetched] = useState(false);
 
 	const [cardData, setCardData] = useState([]);
+	const [doc_id, setDocId] = useState("");
+	const [updateString, setUpdateString] = useState("Analyzing...");
+
+	useEffect(() => {
+		console.log(cardData);
+		if (!doc_id) return;
+
+		const docRef = doc(db, "analysis-jobs", doc_id);
+
+		// subscribe to the document
+		const unsubscribe = onSnapshot(docRef, (doc) => {
+			console.log("Current data: ", doc.data());
+			let data = doc.data();
+			if (!data) return;
+
+			if (data["status"] === "pending") {
+				let lastUpdate = data["updates"][data["updates"].length - 1];
+				setUpdateString(lastUpdate);
+			} else if (data["status"] === "complete") {
+				setCardData(data["data"]);
+				setIsFetching(false);
+				setHasFetched(true);
+			}
+		});
+		return () => {
+			unsubscribe();
+		};
+	}, [doc_id]);
 
 	return (
 		<div className="page-container center">
@@ -217,10 +247,11 @@ export const Dashboard = () => {
 								(response) => {
 									console.log(response);
 									data = response.data;
-									setIsFetching(false);
-									setHasFetched(true);
+									// setIsFetching(false);
+									// setHasFetched(true);
 									// @ts-ignore
-									setCardData(response.data);
+									// setCardData(response.data);
+									setDocId(response.data);
 								}
 							);
 						})}
@@ -272,7 +303,7 @@ export const Dashboard = () => {
 								marginTop: "1rem",
 							}}
 						>
-							Analyzing...
+							{updateString}
 						</h2>
 					</div>
 				</AnimateHeight>

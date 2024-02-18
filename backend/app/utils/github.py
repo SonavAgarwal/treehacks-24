@@ -22,8 +22,15 @@ from app.models.git_models import *
 from app.models.analysis_models import *
 from datetime import datetime
 import requests
+import firebase_admin
 
 together_key = os.getenv("TOGETHER_KEY")
+
+
+def add_update(doc_ref, update: str):
+    doc_ref.update({
+        "updates": firebase_admin.firestore.ArrayUnion([update])
+    })
 
 
 def create_repository_objects(query_outputs, user_username):
@@ -136,7 +143,7 @@ async def fetch_repos(user_username):
                 return None
 
 
-def download_repos(repos: list[GitRepository], queries: dict[str, CodeAnalysisQuery], username):
+def download_repos(repos: list[GitRepository], queries: dict[str, CodeAnalysisQuery], username, doc_ref):
 
     os.chdir('/usr/src/app')  # Ensure we're in the right directory
 
@@ -163,6 +170,9 @@ def download_repos(repos: list[GitRepository], queries: dict[str, CodeAnalysisQu
         original_cwd = os.getcwd()  # Save the original working directory
 
         try:
+
+            add_update(doc_ref, f"Cloning {repo.name}")
+
             # STEP 1: CLONE THE REPO
             clone_command = " ".join([
                 "git clone",
@@ -284,11 +294,13 @@ def process_grep_output(output: str):
     return code_chunks
 
 
-def fetch_files(repos: list[GitRepository], username: str):
+def fetch_files(repos: list[GitRepository], username: str, doc_ref):
     clone_dir = f"/usr/cloned_repos/{username}_repos"
     res = []
 
     for repo in repos:
+        add_update(doc_ref, f"Fetching files from {repo.name}")
+
         user = repo.url.split('/')[-2]
         repo_path = os.path.join(clone_dir, user, repo.name)
         os.chdir(repo_path)  # Change working directory to the repo's path
