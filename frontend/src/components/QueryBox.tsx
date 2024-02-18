@@ -31,9 +31,13 @@ export const QueryBox = (props: {
         <div className={`score ${getColor(props.score)}`}>{props.score}</div>
       </div>
       <div className="code-snippets">
-        {props.code_snippets.map((snippet, index) => (
-          <CodeSnippet key={index} {...snippet} />
-        ))}
+        {props.score <= 3 ? (
+          <p>No relevant code to show.</p>
+        ) : (
+          props.code_snippets.map((snippet, index) => (
+            <CodeSnippet key={index} {...snippet} />
+          ))
+        )}
       </div>
     </div>
   );
