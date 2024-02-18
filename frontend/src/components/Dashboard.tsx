@@ -36,8 +36,21 @@ const QUERY_OPTIONS = [
 		value: "How competent is the candidate at coding in Python?",
 	},
 	{
-		name: "Organization",
+		name: "Code Organization",
 		value: "How well does the candidate organize their code?",
+	},
+	{
+		name: "Databases",
+		value: "How competent is the candidate at using databases?",
+	},
+	{
+		name: "Object-Oriented Programming",
+		value:
+			"How competent is the candidate at using object-oriented programming?",
+	},
+	{
+		name: "React",
+		value: "How competent is the candidate at using React?",
 	},
 ];
 

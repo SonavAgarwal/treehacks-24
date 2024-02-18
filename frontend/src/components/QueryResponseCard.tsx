@@ -30,6 +30,10 @@ const QueryResponseCard = (props: Props) => {
 				{props.queryResponse.details.map((data, index) => {
 					return <Strength key={"strength" + index} rubricItem={data} />;
 				})}
+
+				{!props.queryResponse.details && (
+					<p>We couldn't find any relevant code for this query :/</p>
+				)}
 			</div>
 		</div>
 	);
