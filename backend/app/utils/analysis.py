@@ -658,3 +658,92 @@ def construct_query(query):
 #     )
 
 #     return response
+
+
+def serialize_obj(obj):
+    """Recursively convert a Python object to something JSON-serializable."""
+    if hasattr(obj, "__dict__"):
+        # Serialize custom objects to a dictionary
+        return {key: serialize_obj(value) for key, value in obj.__dict__.items()}
+    elif isinstance(obj, list):
+        # Recursively encode each element in a list
+        return [serialize_obj(element) for element in obj]
+    elif isinstance(obj, dict):
+        # Recursively encode each value in a dictionary
+        return {key: serialize_obj(value) for key, value in obj.items()}
+    else:
+        # Fallback for basic datatypes (int, str, float, bool, None)
+        return obj
+
+
+def uncook_json(data):
+    queries = data["queries"]
+    result = []
+
+    for id in queries:
+
+        new_query_obj = {}
+
+        q_obj = queries[id]
+        query = q_obj["query"]
+        snippets = q_obj["code_snippets"]
+        num_snippets = len(snippets)
+
+        # iterate through rubric and score each attribute
+        rubric = snippets[0]['rubric_attributes']
+        query_attribute_details = []
+
+        for i in range(len(rubric)):
+            attribute_object = rubric[i]
+            name = attribute_object['name']
+            criterion = attribute_object['criterion']
+            weight = attribute_object['weight']
+            all_scores = []
+            for s in snippets:
+                original_score = s['rubric_attributes'][i]['score']
+                info = {
+                    "file_path": s["file_path"],
+                    'code': s['code'],
+                    "repo_name": s["repo_name"],
+                    "repo_url": s["repo_url"],
+                    "repo_description": s["repo_description"]
+                }
+                if original_score > 0:
+                    all_scores.append((1, info))
+                else:
+                    all_scores.append((0, info))
+            all_scores.sort(reverse=True, key=lambda x: x[0])
+            top_snippets = []
+            length = min(3, len(all_scores))
+            total_score = 0
+            for score, s in all_scores[:length]:
+                top_snippets.append(s)
+                total_score += score / length
+
+            attribute = {
+                'name': name,
+                'criterion': criterion,
+                'weight': weight,
+                'score': round(total_score, 2),
+                'snippets': top_snippets
+            }
+
+            # update final things
+            query_attribute_details.append(attribute)
+
+        # calculate final score
+        total_weight = 0
+        total_score = 0
+        for a in query_attribute_details:
+            total_weight += a['weight']
+            total_score += a['weight'] * a['score']
+
+        print(total_score)
+        print(total_weight)
+
+        new_query_obj['query'] = query
+        new_query_obj['details'] = query_attribute_details
+        new_query_obj['score'] = int(total_score / total_weight * 10)
+        result.append(new_query_obj)
+
+    return result

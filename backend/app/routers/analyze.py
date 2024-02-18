@@ -169,5 +169,12 @@ async def analyze_account(body: AnalyzeAccountRequest):
     #     print("===========", flush=True)
     #     print(query_id, query.query, flush=True)
 
-    return response_obj
+    json_string = json.dumps(serialize_obj(response_obj), indent=4)
+    print(json_string, flush=True)
+
+    json_loaded = json.loads(json_string)
+
+    new_json = uncook_json(json_loaded)
+
+    return new_json
     # return repo_and_scores
