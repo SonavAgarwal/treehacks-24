@@ -122,15 +122,20 @@ def download_repos(repos: list[GitRepository], size_limit_mb: int = 100):
     for repo in repos:
         user = repo.url.split('/')[-2]
         repo_path = os.path.join(clone_dir, user, repo.name)
-        print(repo_path)
 
         # Delete the repo directory if it already exists
         if os.path.exists(repo_path):
-            print(f"{repo.name} already exists. Deleting existing directory.")
-            shutil.rmtree(repo_path)
+            print(f"{repo.name} already exists.")
+            continue
+        
+        github_token = os.getenv("GITHUB_TOKEN")
+        if github_token:
+            # Assuming the repo.url is in the format "https://github.com/user/repo"
+            auth_url = repo.url.replace("https://", f"https://x-access-token:{github_token}@")
+        else:
+            auth_url = repo.url  # Proceed without token if it's not available
 
-        print(f"Downloading {repo.name}")
-        clone_command = f"git clone {repo.url} {repo_path}"
+        clone_command = f"git clone {auth_url} {repo_path}"
 
         try:
             subprocess.run(clone_command, check=True, shell=True,
@@ -174,21 +179,20 @@ def fetch_files(repos, username):
     clone_dir = "/usr/cloned_repos"
     res = []
     
-    # get files changed & number of commits they occur in
     for repo in repos:
         user = repo.url.split('/')[-2]
         repo_path = os.path.join(clone_dir, user, repo.name)
         os.chdir(repo_path)  # Change working directory to the repo's path
 
-        # Constructing the git log command
         git_command = f'git log --author="{username}" --pretty="" ' + \
             '--name-only | sort | uniq -c | sort -rn'
         
-        # get list of files contributed to
         files_contributed = []  # To store tuples of (file, num_occurrences)
-        try:
-            output = subprocess.check_output(
-                git_command, shell=True, text=True)
+        
+        # Execute the command with subprocess.run
+        result = subprocess.run(git_command, shell=True, text=True, capture_output=True)
+        if result.returncode == 0:
+            output = result.stdout
             # Parsing the output
             for line in output.strip().split('\n'):
                 parts = line.strip().split(maxsplit=1)
@@ -196,23 +200,25 @@ def fetch_files(repos, username):
                     num_occurrences, file_name = int(parts[0]), parts[1]
                     files_contributed.append(
                         GitFile(file_name, num_occurrences))
-        
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing git command: {e}")
+        else:
+            print(f"Error executing git command: {result.stderr}")
+            continue  # Skip this repo and continue with the next
         
         final_files = []
         for file in files_contributed:
-          try:
-            blame_command = f'git blame {file.path} | grep "sophiasharif"'
-            output = subprocess.check_output(
-              blame_command, shell=True, text=True)
-            code_chuks = process_grep_output(output)
-            file.relevant_code = code_chuks
-            final_files.append(file)
-          except subprocess.CalledProcessError as e:
-              print(f"File not found: {e}")
+            blame_command = f'git blame {file.path} | grep "{username}"'
+            blame_result = subprocess.run(blame_command, shell=True, text=True, capture_output=True)
+            if blame_result.returncode == 0:
+                code_chuks = process_grep_output(blame_result.stdout)
+                file.relevant_code = code_chuks
+                final_files.append(file)
+            else:
+                continue
+                # file must have been deleted or renamed
+        
+        repo.files = final_files
 
-    return res
+        
 
 
 def delete_repos(repos: list[GitRepository]):
