@@ -1,0 +1,10 @@
+.code-snippet {
+  color: #333;
+  padding: 4rem;
+  border-radius: 5px;
+  margin: 1em 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-family: "Courier New", monospace;
+}
