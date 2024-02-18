@@ -1,60 +1,49 @@
-import axios from "axios";
 import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
 import "./App.css";
+import axios from "axios";
+import { Dashboard } from "./components/Dashboard";
 
 function App() {
-	const [name, setName] = useState<string>("sophiasharif");
+	const [name, setName] = useState<string>("");
 
-	function fetchHelloWorld(name: string = "SonavAgarwal") {
-		console.log(name);
+	function fetchHelloWorld() {
 		// "http://localhost:8000/analyze_account"
 		return axios
 			.post("http://localhost:8000/analyze_account", {
-				username: name,
-				queries: [
-					// "How well can the candidate work with low level memory management?",
-					// "Is the candidate familiar with regular expressions?",
-					// "What databases is the candidate familiar with?",
-					"How competent is the programmer with web development?",
-					// "Can the candidate set up an authentication system?",
+				files: [
+					"filter_blind_alleys.ml",
+					"find_the_cheese.js",
+					"meow.hs",
+					"help.tsx",
 				],
+				query: "code that uses functional programming",
 			})
 			.then((response) => {
 				console.log(response);
 			});
 	}
 
-	function sophiaFunction() {
-		return axios.get("http://localhost:8000/testing").then((response) => {
-			console.log(response);
-		});
-	}
-
 	return (
-		<>
-			<div>
-				<h1>Hello World</h1>
-				<input
-					type="text"
-					value={name}
-					onChange={(e) => setName(e.target.value)}
-				/>
-				<button
-					onClick={() => {
-						fetchHelloWorld(name);
-					}}
-				>
-					Fetch
-				</button>
-				<button
-					onClick={() => {
-						sophiaFunction();
-					}}
-				>
-					Sophia button
-				</button>
-			</div>
-		</>
+		// <>
+		// 	<div>
+		// 		<h1>Hello World</h1>
+		// 		<input
+		// 			type="text"
+		// 			value={name}
+		// 			onChange={(e) => setName(e.target.value)}
+		// 		/>
+		// 		<button
+		// 			onClick={() => {
+		// 				fetchHelloWorld();
+		// 			}}
+		// 		>
+		// 			Fetch
+		// 		</button>
+		// 	</div>
+		// </>
+		<Dashboard/>
 	);
 }
 
