@@ -1,4 +1,5 @@
 import json
+import random
 from dotenv import load_dotenv
 import os
 import openai
@@ -6,6 +7,8 @@ import openai
 import asyncio
 from app.models.analysis_models import *
 from app.utils.github import *
+
+MIN_CODE_CHUNK_LENGTH = 750
 
 config = {
     "MODEL_STRING": "mistralai/Mistral-7B-Instruct-v0.1"
@@ -331,12 +334,16 @@ async def eval_query(query, client):
         query_response.code_snippets = []
         return query_response
 
+    all_code_chunks = sorted(
+        all_code_chunks, key=lambda x: len(x[1]), reverse=True)
+    all_code_chunks = all_code_chunks[:10]
+
     tasks = [eval_code_chunk(code_chunk, file, query, client)
              for file, code_chunk in all_code_chunks]
     snippets = await asyncio.gather(*tasks)
 
-    # # remove the None's
-    # results = [snippet for snippet in results if snippet]
+    # remove the None's
+    snippets = [snippet for snippet in snippets if snippet]
 
     # # find the top 5
     # top_5 = sorted(results, key=lambda x: x.score, reverse=True)[:5]
@@ -369,8 +376,15 @@ async def eval_code_chunk(code_chunk, file, query: CodeAnalysisQuery, client):
     # print("EVALUATING CODE CHUNK DAIRY", flush=True)
     # print(code_chunk, flush=True)
 
+    if (len(code_chunk) < MIN_CODE_CHUNK_LENGTH):
+        return None
+
     print("length of code chunk", len(code_chunk), flush=True)
-    code_chunk = code_chunk[:1000]
+    # pick a random section of 1000 characters
+    # if the code chunk is less than 1000 characters, use the whole thing
+    if (len(code_chunk) > 1000):
+        start = random.randint(0, len(code_chunk) - 1000)
+        code_chunk = code_chunk[start:start + 1000]
 
     prompt = f"""
         You are given a code snippet and a list of attributes to evaluate the code against.

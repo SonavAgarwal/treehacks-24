@@ -1,7 +1,9 @@
 export interface CodeSnippet {
 	code: string;
-	path: string;
-	url: string;
+	file_path: string;
+	repo_url: string;
+	repo_name: string;
+	repo_description: string;
 }
 
 export interface RubricItem {
@@ -9,7 +11,7 @@ export interface RubricItem {
 	criterion: string;
 	weight: number;
 	score: number;
-	codeSnippets: CodeSnippet[];
+	snippets: CodeSnippet[];
 }
 
 export interface QueryResponse {

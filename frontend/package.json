@@ -15,7 +15,8 @@
     "react-animate-height": "^3.2.3",
     "react-code-blocks": "^0.1.6",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.50.1"
+    "react-hook-form": "^7.50.1",
+    "react-loader-spinner": "^6.1.6"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",

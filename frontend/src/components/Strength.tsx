@@ -13,9 +13,9 @@ export const Strength = (props: StrengthProps) => {
 
 	let goodColor = "green";
 
-	if (props.rubricItem.score >= 5) {
+	if (props?.rubricItem.score >= 5) {
 		goodColor = "green";
-	} else if (props.rubricItem.score >= 3) {
+	} else if (props?.rubricItem.score >= 3) {
 		goodColor = "#FFA500";
 	} else {
 		goodColor = "red";
@@ -60,7 +60,7 @@ export const Strength = (props: StrengthProps) => {
 						marginLeft: "1rem",
 					}}
 				>
-					{props.rubricItem.name}
+					{props?.rubricItem.name}
 				</h2>
 				<div style={{ flex: 1 }}></div>
 
@@ -81,7 +81,7 @@ export const Strength = (props: StrengthProps) => {
 								width: "3rem",
 								height: "1.5rem",
 								backgroundColor:
-									i < props.rubricItem.score ? goodColor : "lightgrey",
+									i < props?.rubricItem.score ? goodColor : "lightgrey",
 							}}
 						></div>
 					))}
@@ -94,8 +94,8 @@ export const Strength = (props: StrengthProps) => {
 						marginTop: "1rem",
 					}}
 				>
-					{props.rubricItem.codeSnippets.map((snippet, index) => {
-						let extension = snippet.path.split(".").pop();
+					{props?.rubricItem?.snippets.map((snippet, index) => {
+						let extension = snippet.file_path.split(".").pop();
 						return (
 							<div
 								key={"snippet" + index}
@@ -112,7 +112,7 @@ export const Strength = (props: StrengthProps) => {
 										fontSize: "0.8rem",
 									}}
 								>
-									From {snippet.path}
+									From {snippet.file_path} in {snippet.repo_name}
 								</p>
 								<CodeBlock
 									codeContainerStyle={{
