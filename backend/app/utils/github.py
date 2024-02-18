@@ -182,8 +182,7 @@ def download_repos(repos: list[GitRepository], queries: dict[str, CodeAnalysisQu
             ])
 
             subpro = subprocess.run(clone_command, check=True, shell=True,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    timeout=5)
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             if subpro.returncode != 0:
                 print(f"Failed to clone {repo.name}", flush=True)
