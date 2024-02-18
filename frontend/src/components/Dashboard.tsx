@@ -206,6 +206,9 @@ export const Dashboard = () => {
 				setCardData(data["data"]);
 				setIsFetching(false);
 				setHasFetched(true);
+			} else if (data["status"] === "error") {
+				setUpdateString("An error occurred while analyzing the profile.");
+				setIsFetching(false);
 			}
 		});
 		return () => {
@@ -253,9 +256,15 @@ export const Dashboard = () => {
 									selectedCriteria.push(QUERY_OPTIONS[i].value);
 								}
 							}
+							let gitUrlParts = data.url.split("/");
+							if (gitUrlParts[gitUrlParts.length - 1] === "") {
+								// remove trailing slash
+								gitUrlParts.pop();
+							}
+							let gitUsername = gitUrlParts[gitUrlParts.length - 1];
 
 							setIsFetching(true);
-							sendAnalysisRequest(data.url, selectedCriteria).then(
+							sendAnalysisRequest(gitUsername, selectedCriteria).then(
 								(response) => {
 									console.log(response);
 									data = response.data;
@@ -298,7 +307,10 @@ export const Dashboard = () => {
 						</button>
 					</form>
 				</AnimateHeight>
-				<AnimateHeight duration={500} height={isFetching ? "auto" : 0}>
+				<AnimateHeight
+					duration={500}
+					height={isFetching && !hasFetched ? "auto" : 0}
+				>
 					<div
 						style={{
 							display: "flex",
@@ -307,7 +319,9 @@ export const Dashboard = () => {
 							justifyContent: "center",
 						}}
 					>
-						<ThreeDots color="#0258FF" height={30} width={100} />
+						{isFetching && (
+							<ThreeDots color="#0258FF" height={30} width={100} />
+						)}
 						<h2
 							style={{
 								color: "gray",

@@ -52,6 +52,17 @@ async def analyze_account(background_tasks: BackgroundTasks, body: AnalyzeAccoun
     return doc_id
 
 
+async def run_analysis_wrapper(username: str, queries: List[str], criteria: List[str], doc_ref: firebase_admin.firestore.DocumentReference):
+    try:
+        await run_analysis(username, queries, criteria, doc_ref)
+    except Exception as e:
+        print("Error in run_analysis_wrapper", e, flush=True)
+        doc_ref.update({
+            "status": "error",
+            "updates": firebase_admin.firestore.ArrayUnion([f"Error: {e}", "Something went wrong"]),
+        })
+
+
 async def run_analysis(username: str, queries: List[str], criteria: List[str], doc_ref: firebase_admin.firestore.DocumentReference):
 
     print("Analyzing account", username, flush=True)
@@ -187,19 +198,7 @@ async def run_analysis(username: str, queries: List[str], criteria: List[str], d
     # done
 
     # delete repos
-    add_update(doc_ref, "Cleaning up")
-    delete_repos(successfully_cloned, username)
-
-    # return
-
-    # eval_repos = list(repos_to_download)
-
-    # download_repos(eval_repos)
-
-    # for query_id, query in queries.items():
-    #     print("===========", flush=True)
-    #     print(query_id, query.query, flush=True)
-
+    add_update(doc_ref, "Preparing response")
     json_string = json.dumps(serialize_obj(response_obj), indent=4)
     print(json_string, flush=True)
 
@@ -213,6 +212,18 @@ async def run_analysis(username: str, queries: List[str], criteria: List[str], d
         "updates": firebase_admin.firestore.ArrayUnion(["Done analyzing!"]),
         "data": new_json,
     })
+
+    delete_repos(successfully_cloned, username)
+
+    # return
+
+    # eval_repos = list(repos_to_download)
+
+    # download_repos(eval_repos)
+
+    # for query_id, query in queries.items():
+    #     print("===========", flush=True)
+    #     print(query_id, query.query, flush=True)
 
     # return new_json
     # return repo_and_scores
