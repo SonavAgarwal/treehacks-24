@@ -700,10 +700,18 @@ def uncook_json(data):
 
         q_obj = queries[id]
         query = q_obj["query"]
+        new_query_obj['query'] = query
         snippets = q_obj["code_snippets"]
         num_snippets = len(snippets)
+        if num_snippets == 0:
+            new_query_obj['score'] = 0
+            new_query_obj['details'] = []
+            result.append(new_query_obj)
+            continue
+
 
         # iterate through rubric and score each attribute
+        
         rubric = snippets[0]['rubric_attributes']
         query_attribute_details = []
 
@@ -755,7 +763,7 @@ def uncook_json(data):
         print(total_score)
         print(total_weight)
 
-        new_query_obj['query'] = query
+        
         new_query_obj['details'] = query_attribute_details
         new_query_obj['score'] = int(total_score / total_weight * 10)
         result.append(new_query_obj)
