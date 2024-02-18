@@ -735,7 +735,7 @@ def uncook_json(data):
                     all_scores.append((0, info))
             all_scores.sort(reverse=True, key=lambda x: x[0])
             top_snippets = []
-            length = min(3, len(all_scores))
+            length = min(7, len(all_scores))
             total_score = 0
             for score, s in all_scores[:length]:
                 top_snippets.append(s)
