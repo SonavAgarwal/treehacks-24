@@ -1,0 +1,33 @@
+:root {
+    --color-primary: #2bc4bd;
+    --color-primary-offWhite: #ebeded;
+  }
+  .App{
+    height: 20rem;
+    display:flex;
+    justify-content:center;
+  }
+  
+  .BarChart {
+    background-color: var(--color-primary);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    height: inherit;
+    width: 4em;
+    overflow:hidden;
+  }
+  
+  .BarData {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .PercentText {
+    color: var(--color-primary-offWhite);
+    font:700 1.25rem sans-serif;
+    
+    text-align: center;
+    
+  }

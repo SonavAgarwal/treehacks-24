@@ -6,4 +6,22 @@ input[type=text] {
     box-sizing: border-box;
     font-size: 16px;
     font-family: 'Inter';
+    background-color: #FFFFFF;
+    color: black;
   }
+
+
+  input[type=text]:focus {
+    background-color : #f6f7ff; 
+  }
+
+
+.input-error {
+    border-color: red; /* Change border color to indicate error */
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}

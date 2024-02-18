@@ -1,0 +1,15 @@
+.strength-container {
+    background-color: #FBFBFB;
+    border-radius: 10px;
+    padding-top: 16px;
+    padding-right: 24px;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    text-align: left;
+    display: grid;
+    grid-template-columns: auto;
+    gap: 32px;
+    display:flex;
+    flex-direction: row;
+    width: 96%;
+  }

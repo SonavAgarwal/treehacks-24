@@ -11,17 +11,21 @@ h1 {
     font-size: 24px;
     font-family: CircularXX;
     margin: 0%;
+    color: black;
 }
 
 h2 {
     font-size: 18px;
     font-family: CircularXX;
     margin: 0%;
+    text-align: left;
+    color: black;
 }
 
 p {
     font-size: 16px;
     font-family: 'Inter';
+    color: black;
 }
 
 
@@ -31,9 +35,11 @@ p {
     display : flex;
     justify-content:center;
     align-items: center;
+    gap: 64px;
+    flex-direction: column;
   }
 
-  .grid-container {
+  .dash-container {
     display: grid;
     grid-template-columns: auto;
     gap: 24px;
@@ -46,10 +52,25 @@ p {
     width: 80vw;
   }
 
+  .analysis-container {
+    display: grid;
+    grid-template-columns: auto;
+    gap: 24px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    padding-top: 40px;
+    padding-right: 40px;
+    padding-bottom: 52px;
+    padding-left: 40px;
+    width: 80vw;
+    justify-items: start;
+    flex-wrap:wrap;
+  }
+
   .heading-subheading {
     gap: 12px;
   }
-  
+
   .inner-container {
     background-color: #FBFBFB;
     border-radius: 10px;
@@ -95,7 +116,7 @@ p {
     flex-wrap: wrap;
   }
 
-  .multi-select-unfilled {
+  /* .multi-select-unfilled {
     margin: 10px;
     padding: 4px 24px;
     font-family: 'Inter';
@@ -120,5 +141,5 @@ p {
     gap: 10px;
     font-size: 16px;
     margin: 10px;
-  }
+  } */
 
