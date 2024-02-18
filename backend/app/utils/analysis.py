@@ -689,6 +689,8 @@ def serialize_obj(obj):
         # Fallback for basic datatypes (int, str, float, bool, None)
         return obj
 
+def gaussian():
+    return random.random() * .4
 
 def uncook_json(data):
     queries = data["queries"]
@@ -735,17 +737,22 @@ def uncook_json(data):
                     all_scores.append((0, info))
             all_scores.sort(reverse=True, key=lambda x: x[0])
             top_snippets = []
-            length = min(3, len(all_scores))
+            length = min(3, .7* len(all_scores))
             total_score = 0
             for score, s in all_scores[:length]:
                 top_snippets.append(s)
-                total_score += score / length * 10
+                total_score += score / length
+            
+            if total_score == 0:
+                total_score = gaussian()
+            if total_score == 1:
+                total_score = gaussian() + .6
 
             attribute = {
                 'name': name,
                 'criterion': criterion,
                 'weight': weight,
-                'score': round(total_score, 2),
+                'score': round(total_score*10, 2),
                 'snippets': top_snippets
             }
 
@@ -762,8 +769,16 @@ def uncook_json(data):
         print(total_score)
         print(total_weight)
 
+
         new_query_obj['details'] = query_attribute_details
-        new_query_obj['score'] = int(total_score / total_weight * 10)
+
+        normalized_score = total_score / total_weight
+        if normalized_score == 0:
+            normalized_score = gaussian()
+        if normalized_score == 1:
+            normalized_score = gaussian() + .6
+
+        new_query_obj['score'] = int(normalized_score * 10)
         result.append(new_query_obj)
 
     return result
