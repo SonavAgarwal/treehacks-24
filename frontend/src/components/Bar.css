@@ -31,15 +31,15 @@
   background-color: black;
 }
 
-.BarChart .green {
+.green {
   background-color: #00cc00;
 }
 
-.BarSquare.red {
+.red {
   background-color: #ff3333;
 }
 
-.BarSquare.yellow {
+.yellow {
   background-color: #ffcc00;
 }
 
