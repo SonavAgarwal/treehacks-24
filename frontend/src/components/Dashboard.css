@@ -67,7 +67,18 @@ p {
 }
 
 .heading-subheading {
-  gap: 12px;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.heading-subheading h2 {
+  font-size: 2rem;
+}
+
+.heading-subheading p {
+  font-size: 1rem;
+  width: 100%;
 }
 
 .inner-container {
