@@ -7,17 +7,25 @@ router = APIRouter()
 
 @router.get("/testing")
 async def test():
-    repos = [ GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'),
-             GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai')]
+    repos = [ 
+             GitRepository('study-samurai', 'https://github.com/sophiasharif/study-samurai'),
+             GitRepository('HIST5', 'https://github.com/sophiasharif/HIST5'),
+             GitRepository('sprout', 'https://github.com/sophiasharif/sprout')]
     # files = fetch_files(repos, "sophiasharif")
     # print("LENGTH:", len(files))
     # download_repos(repos)
 
     # repos = await fetch_repos("SonavAgarwal")
-    # files = fetch_files(repos, "sophiasharif")
     # print(repos)
-    # download_repos(repos)
-    delete_repos(repos)
+    print("downloading repos...", flush=True)
+    download_repos(repos)
+    print("fetching files...")
+    fetch_files(repos, "sophiasharif")
+    for repo in repos:
+        print("REPO ", repo.name)
+        print("Number of files edited: ", len(repo.files))
+
+    # delete_repos(repos)
 
 
 
