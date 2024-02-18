@@ -1,101 +1,136 @@
 body {
-    background: linear-gradient(45deg, #BED7EE, #CBD2EB);
-  }
+  background: linear-gradient(45deg, #bed7ee, #cbd2eb);
+}
 
-  @font-face {
-    font-family: CircularXX;
-    src: url(CircularXX-Bold.otf);
-  }
+@font-face {
+  font-family: FigTree;
+  src: url(figree.otf);
+}
 
 h1 {
-    font-size: 24px;
-    font-family: CircularXX;
-    margin: 0%;
+  font-size: 24px;
+  font-family: FigTree;
+  margin: 0%;
+  color: black;
 }
 
 h2 {
-    font-size: 18px;
-    font-family: CircularXX;
-    margin: 0%;
+  font-size: 18px;
+  font-family: FigTree;
+  margin: 0%;
+  text-align: left;
+  color: black;
 }
 
 p {
-    font-size: 16px;
-    font-family: 'Inter';
+  font-size: 16px;
+  font-family: "Inter";
+  color: black;
 }
 
-
 .center {
-    margin: auto;
-    /* width: 80vw; */
-    display : flex;
-    justify-content:center;
-    align-items: center;
-  }
+  margin: auto;
+  /* width: 80vw; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 64px;
+  flex-direction: column;
+}
 
-  .grid-container {
-    display: grid;
-    grid-template-columns: auto;
-    gap: 24px;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 10px;
-    padding-top: 40px;
-    padding-right: 40px;
-    padding-bottom: 52px;
-    padding-left: 40px;
-    width: 80vw;
-  }
+.dash-container {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 24px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding-top: 40px;
+  padding-right: 40px;
+  padding-bottom: 52px;
+  padding-left: 40px;
+  width: 80vw;
+}
 
-  .heading-subheading {
-    gap: 12px;
-  }
-  
-  .inner-container {
-    background-color: #FBFBFB;
-    border-radius: 10px;
-    padding-top: 16px;
-    padding-right: 24px;
-    padding-bottom: 24px;
-    padding-left: 24px;
-    text-align: left;
-    display: grid;
-    grid-template-columns: auto;
-    gap: 32px;
-  }
+.analysis-container {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 24px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding-top: 40px;
+  padding-right: 40px;
+  padding-bottom: 52px;
+  padding-left: 40px;
+  width: 80vw;
+  justify-items: start;
+  flex-wrap: wrap;
+}
 
-  .inner-container-questions {
-    display: grid;
-    grid-template-columns: auto;
-    gap:24px;
-  }
+.heading-subheading {
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
 
-  .question-heading {
-    display: grid;
-    grid-template-columns: auto;
-    gap:8px;
-  }
+.heading-subheading h2 {
+  font-size: 2rem;
+}
 
-  .submit {
-    background: linear-gradient(45deg, #0258FF, #2A5EC3);
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 10px;
-    font-family: 'Inter';
-    width: 20%;
-  }
+.heading-subheading p {
+  font-size: 1rem;
+  width: 100%;
+}
 
-  .flex-container {
-    display: flex;
-    flex-wrap: wrap;
-  }
+.inner-container {
+  background-color: #fbfbfb;
+  border-radius: 10px;
+  padding-top: 16px;
+  padding-right: 24px;
+  padding-bottom: 24px;
+  padding-left: 24px;
+  text-align: left;
+  display: grid;
+  grid-template-columns: auto;
+  gap: 32px;
+}
 
-  .multi-select-unfilled {
+.inner-container-questions {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 24px;
+}
+
+.question-heading {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 8px;
+}
+
+.submit {
+  background: linear-gradient(45deg, #0258ff, #2a5ec3);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  font-family: "Inter";
+  width: 20%;
+}
+
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.strengths {
+  width: 100%;
+}
+
+/* .multi-select-unfilled {
     margin: 10px;
     padding: 4px 24px;
     font-family: 'Inter';
@@ -120,5 +155,4 @@ p {
     gap: 10px;
     font-size: 16px;
     margin: 10px;
-  }
-
+  } */
