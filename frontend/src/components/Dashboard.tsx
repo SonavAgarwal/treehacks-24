@@ -10,6 +10,12 @@ interface SampleData {
   score: number;
 }
 
+const developer_criteria = [
+  "Code Quality",
+  "Number of Commits",
+  "Other Criteria",
+];
+
 const sampleData: SampleData[] = [
   { strength: "Code Quality", score: 8 },
   { strength: "Data Structures", score: 6 },
@@ -46,6 +52,21 @@ export const Dashboard = () => {
 
     // Add your logic to analyze the GitHub profile here
     console.log("Analyzing GitHub profile:", githubURL);
+    console.log("Selected Criteria for Analysis:", selectedCriteria);
+    for (let c of selectedCriteria) {
+      console.log(c);
+    }
+  };
+
+  // buttone state
+  const [selectedCriteria, setSelectedCriteria] = useState<string[]>([]);
+  const toggleCriteria = (criteria: string) => {
+    console.log("criteria", criteria);
+    setSelectedCriteria((prev) =>
+      prev.includes(criteria)
+        ? prev.filter((c) => c !== criteria)
+        : [...prev, criteria]
+    );
   };
 
   return (
@@ -76,12 +97,14 @@ export const Dashboard = () => {
             <div className="question-heading">
               <h2>Desired Evaluation Criteria</h2>
               <div className="flex-container">
-                <Button text="Code Quality" />
-                <Button text="Number of Commits" />
-                <Button text="Oh no make this super duper duper long" />
-                <Button text="Oh no make this super duper duper long" />
-                <Button text="This is a longer one" />
-                <Button text="Oh no make this super duper duper long" />
+                {developer_criteria.map((criteria) => (
+                  <Button
+                    key={criteria}
+                    text={criteria}
+                    onClick={() => toggleCriteria(criteria)}
+                    selected={selectedCriteria.includes(criteria)}
+                  />
+                ))}
               </div>
             </div>
           </div>
