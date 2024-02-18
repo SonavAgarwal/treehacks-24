@@ -1,0 +1,40 @@
+.multi-select-unfilled {
+    margin: 10px;
+    padding: 4px 40px;
+    font-family: 'Inter';
+    font-weight: medium;
+    border:1px solid #E0E0E0;
+    background: #FBFBFB;
+    color: #848484;
+    border-radius: 30px;
+    gap: 10px;
+    font-size: 16px;
+    transition: transform 0.3s ease;
+  }
+
+.multi-select-unfilled:hover {
+    transform: scale(1.05); /* Scale effect on hover */
+}
+
+  .multi-select-filled {
+    border:1px solid #E0E0E0;
+    background: #0258FF;
+    color: #ffffff;
+    padding: 4px 24px;
+    border-radius: 30px;
+    font-family: 'Inter';
+    font-weight: medium;
+    font-size: 16px;
+    margin: 10px;
+    display:flex;
+    transition: transform 0.3s ease;
+  }
+
+.button {
+    display:flex;
+    flex-direction: row;
+}
+
+.hideCheck {
+    display:none;
+}
